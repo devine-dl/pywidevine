@@ -45,13 +45,7 @@ class Cdm:
     NUM_OF_SESSIONS = 0
     MAX_NUM_OF_SESSIONS = 50  # most common limit
 
-    def __init__(
-        self,
-        device: Device,
-        pssh: Union[Container, bytes, str],
-        license_type: LicenseType = LicenseType.STREAMING,
-        raw: bool = False
-    ):
+    def __init__(self, device: Device, pssh: Union[Container, bytes, str], raw: bool = False):
         """
         Open a Widevine Content Decryption Module (CDM) session.
 
@@ -60,8 +54,6 @@ class Cdm:
                 more device-specific information.
             pssh: Protection System Specific Header Box or Init Data. This should be a
                 compliant mp4 pssh box, or just the init data (Widevine Cenc Header).
-            license_type: Type of License you wish to exchange, often `STREAMING`.
-                The `OFFLINE` Licenses are for Offline licensing of Downloaded content.
             raw: This should be set to True if the PSSH data provided is arbitrary data.
                 E.g., a PSSH Box where the init data is not a Widevine Cenc Header, or
                 is simply arbitrary data.
@@ -90,7 +82,6 @@ class Cdm:
 
         self.device = device
         self.init_data = pssh
-        self.license_type = license_type
         self.raw = raw
 
         if not self.raw:
@@ -128,11 +119,13 @@ class Cdm:
         self.service_certificate = signed_message
         return signed_message
 
-    def get_license_challenge(self, privacy_mode: bool = True) -> bytes:
+    def get_license_challenge(self, type_: LicenseType = LicenseType.STREAMING, privacy_mode: bool = True) -> bytes:
         """
         Get a License Challenge to send to a License Server.
 
         Parameters:
+            type_: Type of License you wish to exchange, often `STREAMING`.
+                The `OFFLINE` Licenses are for Offline licensing of Downloaded content.
             privacy_mode: Encrypt the Client ID using the Privacy Certificate. If the
                 privacy certificate is not set yet, this does nothing.
 
@@ -146,7 +139,7 @@ class Cdm:
         license_request.key_control_nonce = random.randrange(1, 2 ** 31)
 
         license_request.content_id.widevine_pssh_data.pssh_data.append(self.init_data)
-        license_request.content_id.widevine_pssh_data.license_type = self.license_type
+        license_request.content_id.widevine_pssh_data.license_type = type_
         license_request.content_id.widevine_pssh_data.request_id = self.session_id
 
         if self.service_certificate and privacy_mode:
