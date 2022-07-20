@@ -112,8 +112,8 @@ class Cdm:
         signed_message = SignedMessage()
         try:
             signed_message.ParseFromString(certificate)
-        except DecodeError:
-            raise ValueError("Could not parse certificate as a Signed Message.")
+        except DecodeError as e:
+            raise DecodeError(f"Could not parse certificate as a Signed Message: {e}")
 
         self.service_certificate = signed_message
         return signed_message
