@@ -89,7 +89,7 @@ class Cdm:
 
         self.session_id = self.create_session_id(self.device)
         self.service_certificate: Optional[SignedMessage] = None
-        self.license_request: Optional[SignedMessage] = None
+        self.context: Optional[tuple[bytes, bytes]] = None
 
     def set_service_certificate(self, certificate: Union[bytes, str]) -> SignedMessage:
         """
@@ -158,15 +158,14 @@ class Cdm:
             new(self.device.private_key). \
             sign(SHA1.new(license_message.msg))
 
-        # store it for later, we need it for deriving keys when parsing a license
-        self.license_request = license_message
+        self.context = self.derive_context(license_message.msg)
 
         return license_message.SerializeToString()
 
     def parse_license(self, license_message: Union[bytes, str]) -> list[Key]:
         # TODO: What if the CDM generates a 2nd challenge, overwriting the previous making it mismatch
-        #       for deriving keys? We need to make self.license_request always match the license_message
-        if not self.license_request:
+        #       for deriving keys? We need to get these key context's corresponding to their license_message
+        if not self.context:
             raise ValueError("Cannot parse a license message without first making a license request")
 
         if not license_message:
@@ -191,7 +190,7 @@ class Cdm:
             new(self.device.private_key). \
             decrypt(license_message.session_key)
 
-        enc_key, mac_key_server, mac_key_client = self.derive_keys(self.license_request.msg, session_key)
+        enc_key, mac_key_server, mac_key_client = self.derive_keys(*self.context, session_key)
 
         license_signature = HMAC. \
             new(mac_key_server, digestmod=SHA256). \
@@ -306,7 +305,23 @@ class Cdm:
         return enc_client_id
 
     @staticmethod
-    def derive_keys(msg: bytes, key: bytes) -> tuple[bytes, bytes, bytes]:
+    def derive_context(message: bytes) -> tuple[bytes, bytes]:
+        """Returns 2 Context Data used for computing the AES Encryption and HMAC Keys."""
+
+        def _get_enc_context(msg: bytes) -> bytes:
+            label = b"ENCRYPTION"
+            key_size = 16 * 8  # 128-bit
+            return label + b"\x00" + msg + key_size.to_bytes(4, "big")
+
+        def _get_mac_context(msg: bytes) -> bytes:
+            label = b"AUTHENTICATION"
+            key_size = 32 * 8 * 2  # 512-bit
+            return label + b"\x00" + msg + key_size.to_bytes(4, "big")
+
+        return _get_enc_context(message), _get_mac_context(message)
+
+    @staticmethod
+    def derive_keys(enc_context: bytes, mac_context: bytes, key: bytes) -> tuple[bytes, bytes, bytes]:
         """
         Returns 3 keys derived from the input message.
         Key can either be a pre-provision device aes key, provision key, or a session key.
@@ -327,23 +342,10 @@ class Cdm:
         keys and verify licenses.
         """
 
-        def get_enc_context(message: bytes) -> bytes:
-            label = b"ENCRYPTION"
-            key_size = 16 * 8  # 128-bit
-            return label + b"\x00" + message + key_size.to_bytes(4, "big")
-
-        def get_mac_context(message: bytes) -> bytes:
-            label = b"AUTHENTICATION"
-            key_size = 32 * 8 * 2  # 512-bit
-            return label + b"\x00" + message + key_size.to_bytes(4, "big")
-
         def _derive(session_key: bytes, context: bytes, counter: int) -> bytes:
             return CMAC.new(session_key, ciphermod=AES). \
                 update(counter.to_bytes(1, "big") + context). \
                 digest()
-
-        enc_context = get_enc_context(msg)
-        mac_context = get_mac_context(msg)
 
         enc_key = _derive(key, enc_context, 1)
         mac_key_server = _derive(key, mac_context, 1)
