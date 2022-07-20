@@ -110,3 +110,44 @@ def license_(device: Path, pssh: str, server: str, type_: str, raw: bool, privac
     # print keys
     for key in keys:
         log.info(f"[{key.type}] {key.kid.hex}:{key.key.hex()}")
+
+
+@main.command()
+@click.argument("device", type=Path)
+@click.pass_context
+def test(ctx: click.Context, device: Path):
+    """
+    Test the CDM code by getting Content Keys for Bitmovin's Art of Motion example.
+    https://bitmovin.com/demos/drm
+    https://bitmovin-a.akamaihd.net/content/art-of-motion_drm/mpds/11331.mpd
+
+    The device argument is a Path to a Widevine Device (.wvd) file which contains
+    the device private key among other required information.
+    """
+    # The PSSH is the same for all tracks both video and audio.
+    # However, this might not be the case for all services/manifests.
+    pssh = "AAAAW3Bzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAADsIARIQ62dqu8s0Xpa" \
+           "7z2FmMPGj2hoNd2lkZXZpbmVfdGVzdCIQZmtqM2xqYVNkZmFsa3IzaioCSEQyAA=="
+
+    # This License Server requires no authorization at all, no cookies, no credentials
+    # nothing. This is often not the case for real services.
+    license_server = "https://cwip-shaka-proxy.appspot.com/no_auth"
+
+    # Specify OFFLINE if it's a PSSH for a download/offline mode title, e.g., the
+    # Download feature on Netflix Apps. Otherwise, use STREAMING or AUTOMATIC.
+    license_type = LicenseType.STREAMING
+
+    # If the PSSH is not a valid mp4 pssh box, nor a valid CENC Header (init data) then
+    # set this to True, otherwise leave it False.
+    raw = False
+
+    # this runs the `cdm license` CLI-command code with the data we set above
+    # it will print information as it goes to the terminal
+    ctx.invoke(
+        license_,
+        device=device,
+        pssh=pssh,
+        server=license_server,
+        type_=LicenseType.Name(license_type),
+        raw=raw
+    )
