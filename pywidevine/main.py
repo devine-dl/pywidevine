@@ -60,15 +60,13 @@ def license_(device: Path, pssh: str, server: str, type_: str, raw: bool, privac
     """
     log = logging.getLogger("license")
 
-    type_ = LicenseType.Value(type_)
-
     # load device
     device = Device.load(device)
     log.info(f"[+] Loaded Device ({device.system_id} L{device.security_level})")
     log.debug(device)
 
     # load cdm
-    cdm = Cdm(device, pssh, type_, raw)
+    cdm = Cdm(device, pssh, raw)
     log.info(f"[+] Loaded CDM with PSSH: {pssh}")
     log.debug(cdm)
 
@@ -87,7 +85,8 @@ def license_(device: Path, pssh: str, server: str, type_: str, raw: bool, privac
         log.debug(service_cert)
 
     # get license challenge
-    challenge = cdm.get_license_challenge(privacy_mode=True)
+    license_type = LicenseType.Value(type_)
+    challenge = cdm.get_license_challenge(license_type, privacy_mode=True)
     log.info("[+] Created License Request Message (Challenge)")
     log.debug(challenge)
 
