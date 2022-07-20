@@ -82,9 +82,8 @@ class Cdm:
 
         self.device = device
         self.init_data = pssh
-        self.raw = raw
 
-        if not self.raw:
+        if not raw:
             # we only want the init_data of the pssh box
             self.init_data = PSSH.get_as_box(pssh).init_data
 
