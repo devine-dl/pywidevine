@@ -257,12 +257,9 @@ class Cdm:
     def create_session_id(self, device: Device) -> bytes:
         """Create a Session ID based on OEM Crypto API session values."""
         if device.type == device.Types.ANDROID:
-            session_id = "{hex:16X}{counter}".format(
-                hex=random.getrandbits(64),
-                counter=f"{self.NUM_OF_SESSIONS:02}"
-            )
-            session_id.ljust(32, "0")
-            return session_id.encode("ascii")
+            # Note: this reversing is quite old and needs verifying in later OEM Crypto versions like 16
+            #       though ultimately it shouldn't really matter
+            return get_random_bytes(8) + self.NUM_OF_SESSIONS.to_bytes(8, "little")
 
         if device.type == device.Types.CHROME:
             return get_random_bytes(16)
