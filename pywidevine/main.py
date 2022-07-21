@@ -246,33 +246,13 @@ def migrate(ctx: click.Context, device: Path) -> None:
 
     log = logging.getLogger("migrate")
 
-    data = bytearray(device.read_bytes())
-    if not data.startswith(b"WVD"):
-        raise click.UsageError("device: Data does not seem to be a WVD file (magic).", ctx)
-
-    version = data[3]
-    if version == 0:
-        # we have never used version 0, likely data that just so happened to use the WVD magic
-        raise click.UsageError("device: Data does not seem to be a WVD file (v0).", ctx)
-    if version == 2:
-        raise click.UsageError("device: Data is already migrated to the latest version.", ctx)
-
-    success_message = ""
-
-    # v1 to v2
-    if version == 1:
-        data[3] = 2  # set version to 2 to allow loading
-        data[6] = 0  # blank flags as there's no valid flags that aren't deprecated
-        # we can now load it, and loading will ignore the now-removed vmp data and length fields
-        success_message = "Successfully migrated from Version 1 to Version 2."
-
     try:
-        new_device = Device.loads(bytes(data))
+        new_device = Device.migrate(device.read_bytes())
     except ConstructError as e:
-        raise click.UsageError(f"device: Data seems to be corrupt or invalid, {e}", ctx)
+        raise click.UsageError(str(e), ctx)
 
     # save
     log.debug(new_device)
     new_device.dump(device)
 
-    log.info(success_message)
+    log.info("Successfully migrated the Widevine Device (.wvd) file!")
