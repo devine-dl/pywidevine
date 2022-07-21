@@ -32,12 +32,32 @@ class Structures:
         "security_level" / Int8ub,
         "flags" / Padded(1, COptional(BitStruct(
             Padding(7),
-            "send_key_control_nonce" / Flag  # deprecated, do not use
+            "send_key_control_nonce_deprecated" / Flag
         ))),
         "private_key_len" / Int16ub,
         "private_key" / Bytes(this.private_key_len),
         "client_id_len" / Int16ub,
         "client_id" / Bytes(this.client_id_len)
+    )
+
+    v1 = Struct(
+        "signature" / Const(b"WVD"),
+        "version" / Const(Int8ub, 1),
+        "type_" / CEnum(
+            Int8ub,
+            **{t.name: t.value for t in _Types}
+        ),
+        "security_level" / Int8ub,
+        "flags" / Padded(1, COptional(BitStruct(
+            Padding(7),
+            "send_key_control_nonce_deprecated" / Flag
+        ))),
+        "private_key_len" / Int16ub,
+        "private_key" / Bytes(this.private_key_len),
+        "client_id_len" / Int16ub,
+        "client_id" / Bytes(this.client_id_len),
+        "vmp_len" / Int16ub,
+        "vmp" / Bytes(this.vmp_len)
     )
 
 
