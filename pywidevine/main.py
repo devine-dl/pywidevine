@@ -1,14 +1,17 @@
 import logging
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
+from zlib import crc32
 
 import click
 import requests
+from unidecode import unidecode, UnidecodeError
 
 from pywidevine import __version__
 from pywidevine.cdm import Cdm
 from pywidevine.device import Device
-from pywidevine.license_protocol_pb2 import LicenseType
+from pywidevine.license_protocol_pb2 import LicenseType, FileHashes
 
 
 @click.group(invoke_without_command=True)
@@ -150,3 +153,85 @@ def test(ctx: click.Context, device: Path):
         type_=LicenseType.Name(license_type),
         raw=raw
     )
+
+
+@main.command()
+@click.option("-t", "--type", "type_", type=click.Choice([x.name for x in Device.Types], case_sensitive=False),
+              required=True, help="Device Type")
+@click.option("-l", "--level", type=click.IntRange(1, 3), required=True, help="Device Security Level")
+@click.option("-k", "--key", type=Path, required=True, help="Device RSA Private Key in PEM or DER format")
+@click.option("-c", "--client_id", type=Path, required=True, help="Widevine ClientIdentification Blob file")
+@click.option("-v", "--vmp", type=Path, required=True, help="Widevine FileHashes Blob file")
+@click.option("-o", "--output", type=Path, default=None, help="Output Directory")
+@click.pass_context
+def create_device(
+    ctx: click.Context,
+    type_: str,
+    level: int,
+    key: Path,
+    client_id: Path,
+    vmp: Optional[Path] = None,
+    output: Optional[Path] = None
+) -> None:
+    """
+    Create a Widevine Device (.wvd) file from an RSA Private Key (PEM or DER) and Client ID Blob.
+    Optionally also a VMP (Verified Media Path) Blob, which will be stored in the Client ID.
+    The Name argument should be the Device name corresponding to the provided data. E.g., "Nexus 6".
+    It's only used for the output filename.
+    """
+    if not key.is_file():
+        raise click.UsageError("key: Not a path to a file, or it doesn't exist.", ctx)
+    if not client_id.is_file():
+        raise click.UsageError("client_id: Not a path to a file, or it doesn't exist.", ctx)
+    if vmp and not vmp.is_file():
+        raise click.UsageError("vmp: Not a path to a file, or it doesn't exist.", ctx)
+
+    log = logging.getLogger("create-device")
+
+    device = Device(
+        type_=Device.Types[type_.upper()],
+        security_level=level,
+        flags=None,
+        private_key=key.read_bytes(),
+        client_id=client_id.read_bytes()
+    )
+
+    if vmp:
+        new_vmp_data = vmp.read_bytes()
+        if device.client_id.vmp_data and device.client_id.vmp_data != new_vmp_data:
+            log.warning("Client ID already has Verified Media Path data")
+        device.client_id.vmp_data = new_vmp_data
+
+    client_info = {}
+    for entry in device.client_id.client_info:
+        client_info[entry.name] = entry.value
+
+    wvd_bin = device.dumps()
+
+    name = f"{client_info['company_name']} {client_info['model_name']}"
+    if client_info.get("widevine_cdm_version"):
+        name += f" {client_info['widevine_cdm_version']}"
+    name += f" {crc32(wvd_bin).to_bytes(4, 'big').hex()}"
+
+    try:
+        name = unidecode(name.strip().lower().replace(" ", "_"))
+    except UnidecodeError as e:
+        raise click.ClickException(f"Failed to sanitize name, {e}")
+
+    out_path = (output or Path.cwd()) / f"{name}_{device.system_id}_l{device.security_level}.wvd"
+    out_path.write_bytes(wvd_bin)
+
+    log.info(f"Created Widevine Device (.wvd) file, {out_path.name}")
+    log.info(f" + Type: {device.type.name}")
+    log.info(f" + System ID: {device.system_id}")
+    log.info(f" + Security Level: {device.security_level}")
+    log.info(f" + Flags: {device.flags}")
+    log.info(f" + Private Key: {bool(device.private_key)} ({device.private_key.size_in_bits()} bit)")
+    log.info(f" + Client ID: {bool(device.client_id)} ({len(device.client_id.SerializeToString())} bytes)")
+    if device.client_id.vmp_data:
+        file_hashes_ = FileHashes()
+        file_hashes_.ParseFromString(device.client_id.vmp_data)
+        log.info(f" + VMP: True ({len(file_hashes_.signatures)} signatures)")
+    else:
+        log.info(f" + VMP: False")
+    log.info(f" + Saved to: {out_path.absolute()}")
