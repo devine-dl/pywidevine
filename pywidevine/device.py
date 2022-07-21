@@ -25,7 +25,7 @@ class _Types(Enum):
 class _Structures:
     header = Struct(
         "signature" / Const(b"WVD"),
-        "version" / Const(Int8ub, 1)
+        "version" / Int8ub
     )
 
     v2 = Struct(
