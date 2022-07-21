@@ -62,10 +62,6 @@ class Cdm:
         The limit is different for each device and security level, most commonly 50.
         This limit is handled by the OEM Crypto API. Multiple sessions can be open at
         a time and sessions should be closed when no longer needed.
-
-        If an API or System requests a Widevine Session ID, it is best to provide it
-        the real Session ID created here (self.session_id) instead of an arbitrary or
-        random value.
         """
         if not device:
             raise ValueError("A Widevine Device must be provided.")
@@ -87,7 +83,7 @@ class Cdm:
             # we only want the init_data of the pssh box
             self.init_data = PSSH.get_as_box(pssh).init_data
 
-        self.session_id = self.create_session_id(self.device)
+        self.session_id = get_random_bytes(16)
         self.service_certificate: Optional[SignedMessage] = None
         self.context: dict[bytes, tuple[bytes, bytes]] = {}
 
@@ -253,18 +249,6 @@ class Cdm:
             subprocess.check_call([executable, *args])
         except subprocess.CalledProcessError as e:
             raise subprocess.SubprocessError(f"Failed to Decrypt! Shaka Packager Error: {e}")
-
-    def create_session_id(self, device: Device) -> bytes:
-        """Create a Session ID based on OEM Crypto API session values."""
-        if device.type == device.Types.ANDROID:
-            # Note: this reversing is quite old and needs verifying in later OEM Crypto versions like 16
-            #       though ultimately it shouldn't really matter
-            return get_random_bytes(8) + self.NUM_OF_SESSIONS.to_bytes(8, "little")
-
-        if device.type == device.Types.CHROME:
-            return get_random_bytes(16)
-
-        raise ValueError(f"Device Type {device.type.name} is not implemented")
 
     @staticmethod
     def encrypt_client_id(
