@@ -176,8 +176,6 @@ def create_device(
     """
     Create a Widevine Device (.wvd) file from an RSA Private Key (PEM or DER) and Client ID Blob.
     Optionally also a VMP (Verified Media Path) Blob, which will be stored in the Client ID.
-    The Name argument should be the Device name corresponding to the provided data. E.g., "Nexus 6".
-    It's only used for the output filename.
     """
     if not key.is_file():
         raise click.UsageError("key: Not a path to a file, or it doesn't exist.", ctx)
