@@ -21,11 +21,8 @@ class _Types(Enum):
     ANDROID = 2
 
 
-class Device:
-    # needed so bin_format can enumerate the types
-    Types = _Types
-
-    bin_format = Struct(
+class Structures:
+    v2 = Struct(
         "signature" / Const(b"WVD"),
         "version" / Const(Int8ub, 2),
         "type_" / CEnum(
@@ -42,6 +39,12 @@ class Device:
         "client_id_len" / Int16ub,
         "client_id" / Bytes(this.client_id_len)
     )
+
+
+class Device:
+    Types = _Types
+
+    supported_structure = Structures.v2
 
     # == Bin Format Revisions == #
     # Version 2: Removed vmp and vmp_len as it should already be within the Client ID
@@ -109,18 +112,18 @@ class Device:
             data = base64.b64decode(data)
         if not isinstance(data, bytes):
             raise ValueError(f"Expecting Bytes or Base64 input, got {data!r}")
-        return cls(**cls.bin_format.parse(data))
+        return cls(**cls.supported_structure.parse(data))
 
     @classmethod
     def load(cls, path: Union[Path, str]) -> Device:
         if not isinstance(path, (Path, str)):
             raise ValueError(f"Expecting Path object or path string, got {path!r}")
         with Path(path).open(mode="rb") as f:
-            return cls(**cls.bin_format.parse_stream(f))
+            return cls(**cls.supported_structure.parse_stream(f))
 
     def dumps(self) -> bytes:
         private_key = self.private_key.export_key("DER") if self.private_key else None
-        return self.bin_format.build(dict(
+        return self.supported_structure.build(dict(
             version=2,
             type_=self.type.value,
             security_level=self.security_level,
