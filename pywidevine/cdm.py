@@ -89,7 +89,7 @@ class Cdm:
 
         self.session_id = self.create_session_id(self.device)
         self.service_certificate: Optional[SignedMessage] = None
-        self.context: Optional[tuple[bytes, bytes]] = None
+        self.context: dict[bytes, tuple[bytes, bytes]] = {}
 
     def set_service_certificate(self, certificate: Union[bytes, str]) -> SignedMessage:
         """
@@ -131,6 +131,8 @@ class Cdm:
         Returns a SignedMessage containing a LicenseRequest message. It's signed with
         the Private Key of the device provision.
         """
+        request_id = get_random_bytes(16)
+
         license_request = LicenseRequest()
         license_request.type = LicenseRequest.RequestType.Value("NEW")
         license_request.request_time = int(time.time())
@@ -139,7 +141,7 @@ class Cdm:
 
         license_request.content_id.widevine_pssh_data.pssh_data.append(self.init_data)
         license_request.content_id.widevine_pssh_data.license_type = type_
-        license_request.content_id.widevine_pssh_data.request_id = self.session_id
+        license_request.content_id.widevine_pssh_data.request_id = request_id
 
         if self.service_certificate and privacy_mode:
             # encrypt the client id for privacy mode
@@ -158,16 +160,11 @@ class Cdm:
             new(self.device.private_key). \
             sign(SHA1.new(license_message.msg))
 
-        self.context = self.derive_context(license_message.msg)
+        self.context[request_id] = self.derive_context(license_message.msg)
 
         return license_message.SerializeToString()
 
     def parse_license(self, license_message: Union[bytes, str]) -> list[Key]:
-        # TODO: What if the CDM generates a 2nd challenge, overwriting the previous making it mismatch
-        #       for deriving keys? We need to get these key context's corresponding to their license_message
-        if not self.context:
-            raise ValueError("Cannot parse a license message without first making a license request")
-
         if not license_message:
             raise ValueError("Cannot parse an empty license_message as a SignedMessage")
 
@@ -186,11 +183,15 @@ class Cdm:
         licence = License()
         licence.ParseFromString(license_message.msg)
 
+        context = self.context[licence.id.request_id]
+        if not context:
+            raise ValueError("Cannot parse a license message without first making a license request")
+
         session_key = PKCS1_OAEP. \
             new(self.device.private_key). \
             decrypt(license_message.session_key)
 
-        enc_key, mac_key_server, mac_key_client = self.derive_keys(*self.context, session_key)
+        enc_key, mac_key_server, mac_key_client = self.derive_keys(*context, session_key)
 
         license_signature = HMAC. \
             new(mac_key_server, digestmod=SHA256). \
