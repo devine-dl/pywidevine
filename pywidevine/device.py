@@ -23,13 +23,15 @@ class _Types(Enum):
 
 
 class _Structures:
+    magic = Const(b"WVD")
+
     header = Struct(
-        "signature" / Const(b"WVD"),
+        "signature" / magic,
         "version" / Int8ub
     )
 
     v2 = Struct(
-        "signature" / Const(b"WVD"),
+        "signature" / magic,
         "version" / Const(Int8ub, 2),
         "type_" / CEnum(
             Int8ub,
@@ -47,7 +49,7 @@ class _Structures:
     )
 
     v1 = Struct(
-        "signature" / Const(b"WVD"),
+        "signature" / magic,
         "version" / Const(Int8ub, 1),
         "type_" / CEnum(
             Int8ub,
