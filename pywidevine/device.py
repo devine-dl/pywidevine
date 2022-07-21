@@ -6,7 +6,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Optional, Union
 
-from construct import BitStruct, Bytes, Const, ConstructError
+from construct import BitStruct, Bytes, Const, ConstructError, Container
 from construct import Enum as CEnum
 from construct import Int8ub, Int16ub
 from construct import Optional as COptional
@@ -184,6 +184,7 @@ class Device:
         if header.version == 1:  # v1 to v2
             data = _Structures.v1.parse(data)
             data.version = 2  # update version to 2 to allow loading
+            data.flags = Container()  # blank flags that may have been used in v1
 
             vmp = FileHashes()
             if data.vmp:
