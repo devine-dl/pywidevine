@@ -122,7 +122,7 @@ class Device:
         private_key = self.private_key.export_key("DER") if self.private_key else None
         return self.bin_format.build(dict(
             version=2,
-            type=self.type.value,
+            type_=self.type.value,
             security_level=self.security_level,
             flags=self.flags,
             private_key_len=len(private_key) if private_key else 0,
