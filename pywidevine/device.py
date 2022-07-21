@@ -21,7 +21,7 @@ class _Types(Enum):
     ANDROID = 2
 
 
-class Structures:
+class _Structures:
     v2 = Struct(
         "signature" / Const(b"WVD"),
         "version" / Const(Int8ub, 2),
@@ -63,7 +63,7 @@ class Structures:
 
 class Device:
     Types = _Types
-
+    Structures = _Structures
     supported_structure = Structures.v2
 
     # == Bin Format Revisions == #
