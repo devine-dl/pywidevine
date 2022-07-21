@@ -117,8 +117,10 @@ def license_(device: Path, pssh: str, server: str, type_: str, raw: bool, privac
 
 @main.command()
 @click.argument("device", type=Path)
+@click.option("-p", "--privacy", is_flag=True, default=False,
+              help="Use Privacy Mode, off by default.")
 @click.pass_context
-def test(ctx: click.Context, device: Path):
+def test(ctx: click.Context, device: Path, privacy: bool):
     """
     Test the CDM code by getting Content Keys for Bitmovin's Art of Motion example.
     https://bitmovin.com/demos/drm
@@ -152,7 +154,8 @@ def test(ctx: click.Context, device: Path):
         pssh=pssh,
         server=license_server,
         type_=LicenseType.Name(license_type),
-        raw=raw
+        raw=raw,
+        privacy=privacy
     )
 
 
