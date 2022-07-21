@@ -6,6 +6,7 @@ from zlib import crc32
 
 import click
 import requests
+from construct import ConstructError
 from unidecode import unidecode, UnidecodeError
 
 from pywidevine import __version__
@@ -233,3 +234,45 @@ def create_device(
     else:
         log.info(f" + VMP: False")
     log.info(f" + Saved to: {out_path.absolute()}")
+
+
+@main.command()
+@click.argument("device", type=Path)
+@click.pass_context
+def migrate(ctx: click.Context, device: Path) -> None:
+    """Upgrade from earlier versions of the Widevine Device (.wvd) format."""
+    if not device.is_file():
+        raise click.UsageError("device: Not a path to a file, or it doesn't exist.", ctx)
+
+    log = logging.getLogger("migrate")
+
+    data = bytearray(device.read_bytes())
+    if not data.startswith(b"WVD"):
+        raise click.UsageError("device: Data does not seem to be a WVD file (magic).", ctx)
+
+    version = data[3]
+    if version == 0:
+        # we have never used version 0, likely data that just so happened to use the WVD magic
+        raise click.UsageError("device: Data does not seem to be a WVD file (v0).", ctx)
+    if version == 2:
+        raise click.UsageError("device: Data is already migrated to the latest version.", ctx)
+
+    success_message = ""
+
+    # v1 to v2
+    if version == 1:
+        data[3] = 2  # set version to 2 to allow loading
+        data[6] = 0  # blank flags as there's no valid flags that aren't deprecated
+        # we can now load it, and loading will ignore the now-removed vmp data and length fields
+        success_message = "Successfully migrated from Version 1 to Version 2."
+
+    try:
+        new_device = Device.loads(bytes(data))
+    except ConstructError as e:
+        raise click.UsageError(f"device: Data seems to be corrupt or invalid, {e}", ctx)
+
+    # save
+    log.debug(new_device)
+    new_device.dump(device)
+
+    log.info(success_message)
