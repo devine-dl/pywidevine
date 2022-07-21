@@ -17,9 +17,6 @@ Widevine CDM (Content Decryption Module) implementation in Python.
 
 *Credit*: w3.org
 
-Almost the entire Widevine Protocol seen above is implemented except for Sessions which I will be implementing soon.
-Currently, only one session can be made and used at a time or problems will happen.
-
 ### Web Server
 
 This may be an API/Server in front of a License Server. For example, Netflix's Custom MSL-based API front.
