@@ -248,7 +248,7 @@ def migrate(ctx: click.Context, device: Path) -> None:
 
     try:
         new_device = Device.migrate(device.read_bytes())
-    except ConstructError as e:
+    except (ConstructError, ValueError) as e:
         raise click.UsageError(str(e), ctx)
 
     # save
