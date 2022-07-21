@@ -7,7 +7,7 @@ from typing import Any, Optional, Union
 
 from construct import BitStruct, Bytes, Const
 from construct import Enum as CEnum
-from construct import Flag, Int8ub, Int16ub
+from construct import Int8ub, Int16ub
 from construct import Optional as COptional
 from construct import Padded, Padding, Struct, this
 from Crypto.PublicKey import RSA
@@ -31,8 +31,8 @@ class Structures:
         ),
         "security_level" / Int8ub,
         "flags" / Padded(1, COptional(BitStruct(
-            Padding(7),
-            "send_key_control_nonce_deprecated" / Flag
+            # no per-device flags yet
+            Padding(8)
         ))),
         "private_key_len" / Int16ub,
         "private_key" / Bytes(this.private_key_len),
@@ -49,8 +49,8 @@ class Structures:
         ),
         "security_level" / Int8ub,
         "flags" / Padded(1, COptional(BitStruct(
-            Padding(7),
-            "send_key_control_nonce_deprecated" / Flag
+            # no per-device flags yet
+            Padding(8)
         ))),
         "private_key_len" / Int16ub,
         "private_key" / Bytes(this.private_key_len),
