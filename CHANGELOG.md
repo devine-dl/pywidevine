@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2022-07-22
+
+### Fixed
+
+- The --vmp argument of the create-device command is now optional.
+
 ## [1.1.0] - 2022-07-21
 
 ### Added
@@ -61,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release.
 
+[1.1.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.1.1
 [1.1.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.1.0
 [1.0.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.0.1
 [1.0.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.0.0
