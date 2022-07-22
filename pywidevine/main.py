@@ -165,7 +165,7 @@ def test(ctx: click.Context, device: Path, privacy: bool):
 @click.option("-l", "--level", type=click.IntRange(1, 3), required=True, help="Device Security Level")
 @click.option("-k", "--key", type=Path, required=True, help="Device RSA Private Key in PEM or DER format")
 @click.option("-c", "--client_id", type=Path, required=True, help="Widevine ClientIdentification Blob file")
-@click.option("-v", "--vmp", type=Path, required=True, help="Widevine FileHashes Blob file")
+@click.option("-v", "--vmp", type=Path, default=None, help="Widevine FileHashes Blob file")
 @click.option("-o", "--output", type=Path, default=None, help="Output Directory")
 @click.pass_context
 def create_device(
