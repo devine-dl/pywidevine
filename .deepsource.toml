@@ -1,7 +1,7 @@
 version = 1
 
 exclude_patterns = [
-  "**_pb2.py"  # protobuf files
+  "pywidevine/license_protocol_pb2.py"
 ]
 
 [[analyzers]]
