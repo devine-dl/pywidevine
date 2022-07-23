@@ -29,8 +29,6 @@
 
 ![widevine-overview](docs/images/widevine_overview.svg)
 
-*Credit*: w3.org
-
 ### Web Server
 
 This may be an API/Server in front of a License Server. For example, Netflix's Custom MSL-based API front.
@@ -73,6 +71,12 @@ Though, it's not impossible. Google's Chrome Browser CDM is a simple library ext
 been improving its security using math and obscurity for years. It's getting harder and harder to break with its latest
 versions only being beaten by Brute-force style methods. However, they have a huge team of very skilled workers, and
 making a CDM in C++ has immediate security benefits and a lot of methods to obscure and obfuscate the code.
+
+## Credit
+
+- Widevine Icons &copy; Google.
+- Protocol Overview &copy; https://www.w3.org/TR/encrypted-media -- slightly modified to fit the page better.
+- The awesome community for their shared research and insight into the Widevine Protocol and Key Derivation.
 
 ## License
 
