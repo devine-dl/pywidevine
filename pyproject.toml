@@ -12,7 +12,7 @@ readme = "README.md"
 repository = "https://github.com/rlaphoenix/pywidevine"
 keywords = ["widevine", "drm", "google"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: End Users/Desktop",
     "Natural Language :: English",
