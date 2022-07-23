@@ -1,0 +1,17 @@
+version = 1
+
+exclude_patterns = [
+  "**_pb2.py"  # protobuf files
+]
+
+[[analyzers]]
+name = "python"
+enabled = true
+
+  [analyzers.meta]
+  runtime_version = "3.x.x"
+  max_line_length = 120
+
+[[analyzers]]
+name = "secrets"
+enabled = false
