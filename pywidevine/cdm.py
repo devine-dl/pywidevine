@@ -265,15 +265,15 @@ class Cdm:
             "--enable_raw_key_decryption", "--keys",
             ",".join([
                 *[
-                    "label={}:key_id={}:key={}".format(i, kid.hex, key.lower())
+                    f"label={i}:key_id={kid.hex}:key={key.lower()}"
                     for i, (kid, key) in enumerate(content_keys.items())
                 ],
                 *[
                     # Apple TV+ needs this as their files do not use the KID supplied in the manifest
-                    "label={}:key_id={}:key={}".format(i, "00" * 16, key.lower())
+                    f"label={i}:key_id=00000000000000000000000000000000:key={key.lower()}"
                     for i, (kid, key) in enumerate(content_keys.items(), len(content_keys))
                 ]
-            ]),
+            ])
         ]
 
         if temp:
