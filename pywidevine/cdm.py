@@ -222,7 +222,7 @@ class Cdm:
             new(self.device.private_key). \
             decrypt(license_message.session_key)
 
-        enc_key, mac_key_server, mac_key_client = self.derive_keys(*context, session_key)
+        enc_key, mac_key_server, _ = self.derive_keys(*context, session_key)
 
         license_signature = HMAC. \
             new(mac_key_server, digestmod=SHA256). \

@@ -235,7 +235,7 @@ def create_device(
         file_hashes_.ParseFromString(device.client_id.vmp_data)
         log.info(f" + VMP: True ({len(file_hashes_.signatures)} signatures)")
     else:
-        log.info(f" + VMP: False")
+        log.info(" + VMP: False")
     log.info(f" + Saved to: {out_path.absolute()}")
 
 
