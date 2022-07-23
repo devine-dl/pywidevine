@@ -1,6 +1,20 @@
-# pywidevine
+<p align="center">
+    <img src="docs/images/widevine_icon_24.png"> <a href="https://github.com/rlaphoenix/pywidevine">pywidevine</a>
+    <br/>
+    <sup><em>Python Widevine CDM implementation.</em></sup>
+</p>
 
-Widevine CDM (Content Decryption Module) implementation in Python.
+<p align="center">
+    <a href="https://github.com/rlaphoenix/pywidevine/actions/workflows/ci.yml">
+        <img src="https://github.com/rlaphoenix/pywidevine/actions/workflows/ci.yml/badge.svg" alt="Build status">
+    </a>
+    <a href="https://python.org">
+        <img src="https://img.shields.io/badge/python-3.7%2B-informational" alt="Python version">
+    </a>
+    <a href="https://deepsource.io/gh/rlaphoenix/pywidevine">
+        <img src="https://deepsource.io/gh/rlaphoenix/pywidevine.svg/?label=active+issues" alt="DeepSource">
+    </a>
+</p>
 
 ## Disclaimer
 
@@ -13,7 +27,7 @@ Widevine CDM (Content Decryption Module) implementation in Python.
 
 ## Protocol
 
-![widevine-overview](/docs/images/widevine_overview.svg)
+![widevine-overview](docs/images/widevine_overview.svg)
 
 *Credit*: w3.org
 
