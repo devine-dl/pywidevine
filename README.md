@@ -8,7 +8,7 @@
     <a href="https://github.com/rlaphoenix/pywidevine/actions/workflows/ci.yml">
         <img src="https://github.com/rlaphoenix/pywidevine/actions/workflows/ci.yml/badge.svg" alt="Build status">
     </a>
-    <a href="https://python.org">
+    <a href="https://pypi.org/project/pywidevine">
         <img src="https://img.shields.io/badge/python-3.7%2B-informational" alt="Python version">
     </a>
     <a href="https://deepsource.io/gh/rlaphoenix/pywidevine">
