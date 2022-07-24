@@ -1,4 +1,5 @@
 import logging
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -259,3 +260,34 @@ def migrate(ctx: click.Context, device: Path) -> None:
     new_device.dump(device)
 
     log.info("Successfully migrated the Widevine Device (.wvd) file!")
+
+
+@main.command("serve", short_help="Serve your local CDM and Widevine Devices Remotely.")
+@click.argument("config", type=Path)
+@click.option("-h", "--host", type=str, default="127.0.0.1", help="Host to serve from.")
+@click.option("-p", "--port", type=int, default=8786, help="Port to serve from.")
+def serve_(config: Path, host: str, port: int):
+    """
+    Serve your local CDM and Widevine Devices Remotely.
+
+    \b
+    [CONFIG] is a path to a serve config file.
+    See `serve.example.yml` for an example config file.
+
+    \b
+    Host as 127.0.0.1 may block remote access even if port-forwarded.
+    Instead, use 0.0.0.0 and ensure the TCP port you choose is forwarded.
+    """
+    try:
+        import yaml
+        from pywidevine import serve
+    except ImportError:
+        print(
+            "Missing the extra dependencies for serve functionality. "
+            "You may install them under poetry with `poetry install -E serve`, "
+            "or under pip with `pip install pywidevine[serve]`."
+        )
+        sys.exit(1)
+
+    config = yaml.safe_load(config.read_text(encoding="utf8"))
+    serve.run(config, host, port)
