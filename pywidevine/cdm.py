@@ -211,6 +211,12 @@ class Cdm:
         if not isinstance(license_message, SignedMessage):
             raise ValueError(f"Expecting license_response to be a SignedMessage, got {license_message!r}")
 
+        if license_message.type != SignedMessage.MessageType.LICENSE:
+            raise ValueError(
+                f"Expecting a LICENSE message, not a "
+                f"'{SignedMessage.MessageType.Name(license_message.type)}' message."
+            )
+
         licence = License()
         licence.ParseFromString(license_message.msg)
 
