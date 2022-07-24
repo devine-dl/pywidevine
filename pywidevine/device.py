@@ -30,6 +30,7 @@ class _Structures:
         "version" / Int8ub
     )
 
+    # - Removed vmp and vmp_len as it should already be within the Client ID
     v2 = Struct(
         "signature" / magic,
         "version" / Const(Int8ub, 2),
@@ -48,6 +49,7 @@ class _Structures:
         "client_id" / Bytes(this.client_id_len)
     )
 
+    # - Removed system_id as it can be retrieved from the Client ID's DRM Certificate
     v1 = Struct(
         "signature" / magic,
         "version" / Const(Int8ub, 1),
@@ -73,10 +75,6 @@ class Device:
     Types = _Types
     Structures = _Structures
     supported_structure = Structures.v2
-
-    # == Bin Format Revisions == #
-    # Version 2: Removed vmp and vmp_len as it should already be within the Client ID
-    # Version 1: Removed system_id as it can be retrieved from the Client ID's DRM Certificate
 
     def __init__(
         self,
