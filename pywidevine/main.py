@@ -241,25 +241,44 @@ def create_device(
 
 
 @main.command()
-@click.argument("device", type=Path)
+@click.argument("path", type=Path)
 @click.pass_context
-def migrate(ctx: click.Context, device: Path) -> None:
-    """Upgrade from earlier versions of the Widevine Device (.wvd) format."""
-    if not device.is_file():
-        raise click.UsageError("device: Not a path to a file, or it doesn't exist.", ctx)
+def migrate(ctx: click.Context, path: Path) -> None:
+    """
+    Upgrade from earlier versions of the Widevine Device (.wvd) format.
+
+    The path argument can be a direct path to a Widevine Device (.wvd) file, or a path
+    to a folder of Widevine Devices files.
+
+    The migrated devices are saved to its original location, overwriting the old version.
+    """
+    if not path.exists():
+        raise click.UsageError(f"path: The path '{path}' does not exist.", ctx)
 
     log = logging.getLogger("migrate")
 
-    try:
-        new_device = Device.migrate(device.read_bytes())
-    except (ConstructError, ValueError) as e:
-        raise click.UsageError(str(e), ctx)
+    if path.is_dir():
+        devices = list(path.glob("*.wvd"))
+    else:
+        devices = [path]
 
-    # save
-    log.debug(new_device)
-    new_device.dump(device)
+    migrated = 0
+    for device in devices:
+        log.info(f"Migrating {device.name}...")
 
-    log.info("Successfully migrated the Widevine Device (.wvd) file!")
+        try:
+            new_device = Device.migrate(device.read_bytes())
+        except (ConstructError, ValueError) as e:
+            log.error(f" - {e}")
+            continue
+
+        log.debug(new_device)
+        new_device.dump(device)
+
+        log.info(" + Success")
+        migrated += 1
+
+    log.info(f"Migrated {migrated}/{len(devices)} devices!")
 
 
 @main.command("serve", short_help="Serve your local CDM and Widevine Devices Remotely.")
