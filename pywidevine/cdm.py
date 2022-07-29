@@ -41,6 +41,21 @@ class Cdm:
                            "+Gf2Ogsrf9s2LFvE7NVV2FvKqcWTw4PIV9Sdqrd+QLeFHd/SSZiAjjWyWOddeOrAyhb3BHMEwg2T7eTo/xxvF+YkP"
                            "j89qPwXCYcOxF+6gjomPwzvofcJOxkJkoMmMzcFBDopvab5tDQsyN9UPLGhGC98X/8z8QSQ+spbJTYLdgFenFoGq4"
                            "7gLwDS6NWYYQSqzE3Udf2W7pzk4ybyG4PHBYV3s4cyzdq8amvtE/sNSdOKReuHpfQ=")
+    root_signed_cert = SignedDrmCertificate()
+    root_signed_cert.ParseFromString(base64.b64decode(
+        "CpwDCAASAQAY3ZSIiwUijgMwggGKAoIBgQC0/jnDZZAD2zwRlwnoaM3yw16b8udNI7EQ24dl39z7nzWgVwNTTPZtNX2meNuzNtI/nECplSZy"
+        "f7i+Zt/FIZh4FRZoXS9GDkPLioQ5q/uwNYAivjQji6tTW3LsS7VIaVM+R1/9Cf2ndhOPD5LWTN+udqm62SIQqZ1xRdbX4RklhZxTmpfrhNfM"
+        "qIiCIHAmIP1+QFAn4iWTb7w+cqD6wb0ptE2CXMG0y5xyfrDpihc+GWP8/YJIK7eyM7l97Eu6iR8nuJuISISqGJIOZfXIbBH/azbkdDTKjDOx"
+        "+biOtOYS4AKYeVJeRTP/Edzrw1O6fGAaET0A+9K3qjD6T15Id1sX3HXvb9IZbdy+f7B4j9yCYEy/5CkGXmmMOROtFCXtGbLynwGCDVZEiMg1"
+        "7B8RsyTgWQ035Ec86kt/lzEcgXyUikx9aBWE/6UI/Rjn5yvkRycSEbgj7FiTPKwS0ohtQT3F/hzcufjUUT4H5QNvpxLoEve1zqaWVT94tGSC"
+        "UNIzX5ECAwEAARKAA1jx1k0ECXvf1+9dOwI5F/oUNnVKOGeFVxKnFO41FtU9v0KG9mkAds2T9Hyy355EzUzUrgkYU0Qy7OBhG+XaE9NVxd0a"
+        "y5AeflvG6Q8in76FAv6QMcxrA4S9IsRV+vXyCM1lQVjofSnaBFiC9TdpvPNaV4QXezKHcLKwdpyywxXRESYqI3WZPrl3IjINvBoZwdVlkHZV"
+        "dA8OaU1fTY8Zr9/WFjGUqJJfT7x6Mfiujq0zt+kw0IwKimyDNfiKgbL+HIisKmbF/73mF9BiC9yKRfewPlrIHkokL2yl4xyIFIPVxe9enz2F"
+        "RXPia1BSV0z7kmxmdYrWDRuu8+yvUSIDXQouY5OcCwEgqKmELhfKrnPsIht5rvagcizfB0fbiIYwFHghESKIrNdUdPnzJsKlVshWTwApHQh7"
+        "evuVicPumFSePGuUBRMS9nG5qxPDDJtGCHs9Mmpoyh6ckGLF7RC5HxclzpC5bc3ERvWjYhN0AqdipPpV2d7PouaAdFUGSdUCDA=="
+    ))
+    root_cert = DrmCertificate()
+    root_cert.ParseFromString(root_signed_cert.drm_certificate)
 
     NUM_OF_SESSIONS = 0
     MAX_NUM_OF_SESSIONS = 50  # most common limit
@@ -91,63 +106,67 @@ class Cdm:
         """
         Set a Service Privacy Certificate for Privacy Mode. (optional but recommended)
 
-        Parameters:
-            certificate: Signed Message in Base64 or Bytes form obtained from the Service.
-                Some services have their own, but most use the common privacy cert,
-                (common_privacy_cert).
-
-        Returns the parsed Drm Certificate if successful, otherwise raises a DecodeError.
-
         The Service Certificate is used to encrypt Client IDs in Licenses. This is also
         known as Privacy Mode and may be required for some services or for some devices.
         Chrome CDM requires it as of the enforcement of VMP (Verified Media Path).
+
+        We reject direct DrmCertificates as they do not have signature verification and
+        cannot be verified. You must provide a SignedDrmCertificate or a SignedMessage
+        containing a SignedDrmCertificate.
+
+        Parameters:
+            certificate: SignedDrmCertificate (or SignedMessage containing one) in Base64
+                or Bytes form obtained from the Service. Some services have their own,
+                but most use the common privacy cert, (common_privacy_cert).
+
+        Raises:
+            DecodeError: If the certificate could not be parsed as a SignedDrmCertificate
+                nor a SignedMessage containing a SignedDrmCertificate.
+            ValueError: If the SignedDrmCertificate signature is invalid.
+
+        Returns the parsed and verified DrmCertificate if successful.
         """
         if isinstance(certificate, str):
             certificate = base64.b64decode(certificate)  # assuming base64
 
+        # All these 3 schemas can sort of parse each other in a minimal buggy way,
+        # so we have to parse down the full chain instead of relaying each step.
+        # We also parse fully down to the DrmCertificate before parsing signatures
+        # for the same reason. The data may not parse at a lower level.
+
         signed_message = SignedMessage()
         signed_drm_certificate = SignedDrmCertificate()
-        drm_certificate = DrmCertificate()
-
-        # Note: A secure CDM would likely reject any Service Certificate that is
-        # not either a SignedMessage or a SignedDrmCertificate. This is because
-        # the DrmCertificate itself is not signed. This CDM does not verify the
-        # signatures as I'm not sure what HMAC key is used. At this stage of the
-        # CDM flow, we wouldn't have any mac_keys, and those might not work for
-        # verifying service certificate signatures (likely not).
-
-        # All these 3 schemas can sort of parse each other in a minimal buggy way,
-        # so we have to parse down the full chain instead of relaying each step
 
         try:  # SignedMessage input
             signed_message.ParseFromString(certificate)
             signed_drm_certificate.ParseFromString(signed_message.msg)
             if not signed_drm_certificate.drm_certificate:
                 raise DecodeError()
+            DrmCertificate().ParseFromString(signed_drm_certificate.drm_certificate)
+        except DecodeError:
+            try:  # SignedDrmCertificate input
+                signed_drm_certificate.ParseFromString(certificate)
+                if not signed_drm_certificate.drm_certificate:
+                    raise DecodeError()
+                DrmCertificate().ParseFromString(signed_drm_certificate.drm_certificate)
+            except DecodeError:
+                # could be a direct unsigned DrmCertificate, but reject those anyway
+                raise DecodeError("Could not parse certificate as a SignedDrmCertificate")
+
+        try:
+            pss. \
+                new(RSA.import_key(self.root_cert.public_key)). \
+                verify(
+                    msg_hash=SHA1.new(signed_drm_certificate.drm_certificate),
+                    signature=signed_drm_certificate.signature
+                )
+        except (ValueError, TypeError):
+            raise ValueError("Signature Mismatch on SignedDrmCertificate, rejecting certificate")
+        else:
+            drm_certificate = DrmCertificate()
             drm_certificate.ParseFromString(signed_drm_certificate.drm_certificate)
             self.service_certificate = drm_certificate
             return self.service_certificate
-        except DecodeError:
-            pass
-
-        try:  # SignedDrmCertificate input
-            signed_drm_certificate.ParseFromString(certificate)
-            if not signed_drm_certificate.drm_certificate:
-                raise DecodeError()
-            drm_certificate.ParseFromString(signed_drm_certificate.drm_certificate)
-            self.service_certificate = drm_certificate
-            return self.service_certificate
-        except DecodeError:
-            pass
-
-        try:  # DrmCertificate input
-            drm_certificate.ParseFromString(certificate)
-            self.service_certificate = drm_certificate
-            return self.service_certificate
-        except DecodeError:
-            pass
-
-        raise DecodeError("Could not parse certificate as a Service Certificate")
 
     def get_license_challenge(self, type_: LicenseType = LicenseType.STREAMING, privacy_mode: bool = True) -> bytes:
         """
