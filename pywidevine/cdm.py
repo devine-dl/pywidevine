@@ -233,13 +233,13 @@ class Cdm:
 
         enc_key, mac_key_server, _ = self.derive_keys(*context, session_key)
 
-        license_signature = HMAC. \
+        computed_signature = HMAC. \
             new(mac_key_server, digestmod=SHA256). \
             update(licence.SerializeToString()). \
             digest()
 
-        if license_message.signature != license_signature:
-            raise ValueError("The License Signature doesn't match the Signature listed in the Message")
+        if license_message.signature != computed_signature:
+            raise ValueError("Signature Mismatch on License Message, rejecting license")
 
         return [
             Key.from_key_container(key, enc_key)
