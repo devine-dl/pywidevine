@@ -69,9 +69,13 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
     log.debug(device)
 
     # load cdm
-    cdm = Cdm(device, pssh)
-    log.info(f"[+] Loaded CDM with PSSH: {pssh}")
+    cdm = Cdm(device)
+    log.info(f"[+] Loaded CDM")
     log.debug(cdm)
+
+    # open cdm session
+    session_id = cdm.open()
+    log.info(f"[+] Opened CDM Session: {session_id.hex()}")
 
     if privacy:
         # get service cert for license server via cert challenge
@@ -83,13 +87,13 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
             log.error(f"[-] Failed to get Service Privacy Certificate: [{service_cert.status_code}] {service_cert.text}")
             return
         service_cert = service_cert.content
-        cdm.set_service_certificate(service_cert)
-        log.info("[+] Set Service Privacy Certificate")
+        provider_id = cdm.set_service_certificate(session_id, service_cert)
+        log.info(f"[+] Set Service Privacy Certificate: {provider_id}")
         log.debug(service_cert)
 
     # get license challenge
     license_type = LicenseType.Value(type_)
-    challenge = cdm.get_license_challenge(license_type, privacy_mode=True)
+    challenge = cdm.get_license_challenge(session_id, pssh, license_type, privacy_mode=True)
     log.info("[+] Created License Request Message (Challenge)")
     log.debug(challenge)
 
@@ -106,12 +110,17 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
     log.debug(licence)
 
     # parse license challenge
-    keys = cdm.parse_license(licence)
+    cdm.parse_license(session_id, licence)
     log.info("[+] License Parsed Successfully")
 
     # print keys
-    for key in keys:
+    # Note: This showcases how insecure a Python CDM implementation is
+    #       The keys should not be given to the user, but we cannot prevent this
+    for key in cdm._sessions[session_id].keys:
         log.info(f"[{key.type}] {key.kid.hex}:{key.key.hex()}")
+
+    # close session, disposes of session data
+    cdm.close(session_id)
 
 
 @main.command()
