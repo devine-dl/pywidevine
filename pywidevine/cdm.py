@@ -223,7 +223,7 @@ class Cdm:
         licence = License()
         licence.ParseFromString(license_message.msg)
 
-        context = self.context[licence.id.request_id]
+        context = self.context.get(licence.id.request_id)
         if not context:
             raise ValueError("Cannot parse a license message without first making a license request")
 
