@@ -94,7 +94,7 @@ class PSSH:
             ValueError: If the data is empty, or an unexpected type.
             binascii.Error: If the data could not be decoded as Base64 if provided
                 as a string.
-            construct.ConstructError: If the data could not be parsed as a PSSH mp4 box
+            DecodeError: If the data could not be parsed as a PSSH mp4 box
                 nor a Widevine Cenc Header while strict=True.
         """
         if not data:
