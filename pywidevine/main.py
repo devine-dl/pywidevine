@@ -42,11 +42,9 @@ def main(version: bool, debug: bool) -> None:
 @click.option("-t", "--type", "type_", type=click.Choice(LicenseType.keys(), case_sensitive=False),
               default="STREAMING",
               help="License Type to Request.")
-@click.option("-r", "--raw", is_flag=True, default=False,
-              help="PSSH is Raw.")
 @click.option("-p", "--privacy", is_flag=True, default=False,
               help="Use Privacy Mode, off by default.")
-def license_(device: Path, pssh: str, server: str, type_: str, raw: bool, privacy: bool):
+def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
     """
     Make a License Request for PSSH to SERVER using DEVICE.
     It will return a list of all keys within the returned license.
@@ -71,7 +69,7 @@ def license_(device: Path, pssh: str, server: str, type_: str, raw: bool, privac
     log.debug(device)
 
     # load cdm
-    cdm = Cdm(device, pssh, raw)
+    cdm = Cdm(device, pssh)
     log.info(f"[+] Loaded CDM with PSSH: {pssh}")
     log.debug(cdm)
 
@@ -143,10 +141,6 @@ def test(ctx: click.Context, device: Path, privacy: bool):
     # Download feature on Netflix Apps. Otherwise, use STREAMING or AUTOMATIC.
     license_type = LicenseType.STREAMING
 
-    # If the PSSH is not a valid mp4 pssh box, nor a valid CENC Header (init data) then
-    # set this to True, otherwise leave it False.
-    raw = False
-
     # this runs the `cdm license` CLI-command code with the data we set above
     # it will print information as it goes to the terminal
     ctx.invoke(
@@ -155,7 +149,6 @@ def test(ctx: click.Context, device: Path, privacy: bool):
         pssh=pssh,
         server=license_server,
         type_=LicenseType.Name(license_type),
-        raw=raw,
         privacy=privacy
     )
 

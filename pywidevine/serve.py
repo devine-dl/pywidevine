@@ -71,7 +71,6 @@ async def challenge(request: web.Request) -> web.Response:
 
     # load init data
     init_data = body["init_data"]
-    raw = bool(body.get("raw") or 0)
 
     # load service certificate
     service_certificate = body.get("service_certificate")
@@ -82,7 +81,7 @@ async def challenge(request: web.Request) -> web.Response:
         }, status=403)
 
     # load cdm
-    cdm = Cdm(device, init_data, raw)
+    cdm = Cdm(device, init_data)
     if service_certificate:
         cdm.set_service_certificate(service_certificate)
     request.app["sessions"][session_id] = cdm
