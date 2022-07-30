@@ -152,7 +152,7 @@ class Cdm:
             self.service_certificate = drm_certificate
             return self.service_certificate.provider_id
 
-    def get_license_challenge(self, type_: LicenseType = LicenseType.STREAMING, privacy_mode: bool = True) -> bytes:
+    def get_license_challenge(self, type_: Union[int, str] = LicenseType.STREAMING, privacy_mode: bool = True) -> bytes:
         """
         Get a License Challenge to send to a License Server.
 
@@ -166,6 +166,9 @@ class Cdm:
         the Private Key of the device provision.
         """
         request_id = get_random_bytes(16)
+
+        if isinstance(type_, str):
+            type_ = LicenseType.Value(type_)
 
         license_request = LicenseRequest()
         license_request.type = LicenseRequest.RequestType.Value("NEW")
