@@ -95,7 +95,7 @@ class Cdm:
         self.service_certificate: Optional[DrmCertificate] = None
         self.context: dict[bytes, tuple[bytes, bytes]] = {}
 
-    def set_service_certificate(self, certificate: Union[bytes, str]) -> DrmCertificate:
+    def set_service_certificate(self, certificate: Union[bytes, str]) -> str:
         """
         Set a Service Privacy Certificate for Privacy Mode. (optional but recommended)
 
@@ -117,15 +117,10 @@ class Cdm:
                 nor a SignedMessage containing a SignedDrmCertificate.
             ValueError: If the SignedDrmCertificate signature is invalid.
 
-        Returns the parsed and verified DrmCertificate if successful.
+        Returns the Service Provider ID of the verified DrmCertificate if successful.
         """
         if isinstance(certificate, str):
             certificate = base64.b64decode(certificate)  # assuming base64
-
-        # All these 3 schemas can sort of parse each other in a minimal buggy way,
-        # so we have to parse down the full chain instead of relaying each step.
-        # We also parse fully down to the DrmCertificate before parsing signatures
-        # for the same reason. The data may not parse at a lower level.
 
         signed_message = SignedMessage()
         signed_drm_certificate = SignedDrmCertificate()
@@ -155,7 +150,7 @@ class Cdm:
             drm_certificate = DrmCertificate()
             drm_certificate.ParseFromString(signed_drm_certificate.drm_certificate)
             self.service_certificate = drm_certificate
-            return self.service_certificate
+            return self.service_certificate.provider_id
 
     def get_license_challenge(self, type_: LicenseType = LicenseType.STREAMING, privacy_mode: bool = True) -> bytes:
         """
