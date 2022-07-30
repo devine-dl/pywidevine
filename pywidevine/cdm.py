@@ -60,7 +60,7 @@ class Cdm:
     NUM_OF_SESSIONS = 0
     MAX_NUM_OF_SESSIONS = 50  # most common limit
 
-    def __init__(self, device: Device, pssh: Union[Container, bytes, str], raw: bool = False):
+    def __init__(self, device: Device, pssh: Union[Container, bytes, str]):
         """
         Open a Widevine Content Decryption Module (CDM) session.
 
@@ -69,9 +69,6 @@ class Cdm:
                 more device-specific information.
             pssh: Protection System Specific Header Box or Init Data. This should be a
                 compliant mp4 pssh box, or just the init data (Widevine Cenc Header).
-            raw: This should be set to True if the PSSH data provided is arbitrary data.
-                E.g., a PSSH Box where the init data is not a Widevine Cenc Header, or
-                is simply arbitrary data.
 
         Devices have a limit on how many sessions can be open and active concurrently.
         The limit is different for each device and security level, most commonly 50.
@@ -92,11 +89,7 @@ class Cdm:
         self.NUM_OF_SESSIONS += 1
 
         self.device = device
-        self.init_data = pssh
-
-        if not raw:
-            # we only want the init_data of the pssh box
-            self.init_data = PSSH.get_as_box(pssh).init_data
+        self.init_data = PSSH.get_as_box(pssh).init_data
 
         self.session_id = get_random_bytes(16)
         self.service_certificate: Optional[DrmCertificate] = None
