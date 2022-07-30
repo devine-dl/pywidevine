@@ -130,21 +130,17 @@ class Cdm:
         signed_message = SignedMessage()
         signed_drm_certificate = SignedDrmCertificate()
 
-        try:  # SignedMessage input
+        try:
             signed_message.ParseFromString(certificate)
-            signed_drm_certificate.ParseFromString(signed_message.msg)
-            if not signed_drm_certificate.drm_certificate:
-                raise DecodeError()
-            DrmCertificate().ParseFromString(signed_drm_certificate.drm_certificate)
-        except DecodeError:
-            try:  # SignedDrmCertificate input
+            if signed_message.SerializeToString() == certificate:
+                signed_drm_certificate.ParseFromString(signed_message.msg)
+            else:
                 signed_drm_certificate.ParseFromString(certificate)
-                if not signed_drm_certificate.drm_certificate:
+                if signed_drm_certificate.SerializeToString() != certificate:
                     raise DecodeError()
-                DrmCertificate().ParseFromString(signed_drm_certificate.drm_certificate)
-            except DecodeError:
-                # could be a direct unsigned DrmCertificate, but reject those anyway
-                raise DecodeError("Could not parse certificate as a SignedDrmCertificate")
+        except DecodeError:
+            # could be a direct unsigned DrmCertificate, but reject those anyway
+            raise DecodeError("Could not parse certificate as a SignedDrmCertificate")
 
         try:
             pss. \
