@@ -23,28 +23,6 @@ class PSSH:
         self._box = box
 
     @staticmethod
-    def from_init_data(init_data: Union[str, bytes, WidevinePsshData]) -> Container:
-        """Craft a new PSSH Box from just Widevine PSSH Data (init data)."""
-        if isinstance(init_data, str):
-            init_data = base64.b64decode(init_data)
-        if isinstance(init_data, bytes):
-            cenc_header = WidevinePsshData()
-            cenc_header.ParseFromString(init_data)
-            init_data = cenc_header
-        if not isinstance(init_data, WidevinePsshData):
-            raise ValueError(f"Unexpected value for init_data, {init_data!r}")
-
-        box = Box.parse(Box.build(dict(
-            type=b"pssh",
-            version=0,
-            flags=0,
-            system_ID=PSSH.SystemId.Widevine,
-            init_data=init_data.SerializeToString()
-        )))
-
-        return box
-
-    @staticmethod
     def from_playready_pssh(box: Container) -> Container:
         """
         Convert a PlayReady PSSH to a Widevine PSSH.
