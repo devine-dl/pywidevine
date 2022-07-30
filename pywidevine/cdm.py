@@ -256,6 +256,9 @@ class Cdm:
         """
         Load Keys from a License Message from a License Server Response.
 
+        License Messages can only be loaded a single time. An InvalidContext error will
+        be raised if you attempt to parse a License Message more than once.
+
         Parameters:
             session_id: Session identifier.
             license_message: A SignedMessage containing a License message.
@@ -326,6 +329,8 @@ class Cdm:
             Key.from_key_container(key, enc_key)
             for key in licence.key
         ]
+
+        del session.context[licence.id.request_id]
 
     def decrypt(
         self,
