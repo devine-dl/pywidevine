@@ -111,7 +111,7 @@ class PSSH:
         if isinstance(data, str):
             data = base64.b64decode(data)
         if isinstance(data, bytes):
-            if base64.b64encode(data) == b"CAES":  # likely widevine pssh data
+            if base64.b64encode(data).startswith(b"CAES"):  # likely widevine pssh data
                 try:
                     cenc_header = WidevinePsshData()
                     cenc_header.ParseFromString(data)
