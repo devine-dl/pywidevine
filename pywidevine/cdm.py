@@ -150,6 +150,10 @@ class Cdm:
                 signed_drm_certificate.ParseFromString(certificate)
                 if signed_drm_certificate.SerializeToString() != certificate:
                     raise DecodeError()
+                # Craft a SignedMessage as it's stored as a SignedMessage
+                signed_message.Clear()
+                signed_message.msg = signed_drm_certificate.SerializeToString()
+                # we don't need to sign this message, this is normal
         except DecodeError:
             # could be a direct unsigned DrmCertificate, but reject those anyway
             raise DecodeError("Could not parse certificate as a SignedDrmCertificate")
@@ -164,9 +168,9 @@ class Cdm:
         except (ValueError, TypeError):
             raise SignatureMismatch("Signature Mismatch on SignedDrmCertificate, rejecting certificate")
         else:
+            session.service_certificate = signed_message
             drm_certificate = DrmCertificate()
             drm_certificate.ParseFromString(signed_drm_certificate.drm_certificate)
-            session.service_certificate = drm_certificate
             return drm_certificate.provider_id
 
     def get_license_challenge(
