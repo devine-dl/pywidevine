@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- New CLI command `serve` to serve local WVD devices and CDM sessions remotely as a JSON API.
 - The CLI command `migrate` can now accept a folder path to batch migrate WVD files.
 - The Cdm now uses custom exceptions where the use case is justified. All custom exceptions are under a parent custom
   exception to allow catching of any Pywidevine exception.
@@ -18,9 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Cdm has been reworked as a session-based Cdm. You now initialize the Cdm with just the device you wish to use,
   and now you open sessions with `Cdm.open()` to get a session ID. For usage example see `license` CLI command in
   `main.py`.
-- For the above change, `serve` CLI command interface has changed and now uses a `/open/{device}` endpoint to start
-  a Cdm session. The client will need to first use /open to get a Session ID, then pass the Session ID through to both
-  /challenge and /keys now.
 - The Cdm no longer requires you to specify `raw` bool parameter. It now supports arbitrary and valid Widevine Cenc
  Header Data without needing to explicitly specify which it is.
 - The Cdm `pssh` param has been renamed as `init_data`. Doc-strings have been changed to prioritize explanation of it
