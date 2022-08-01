@@ -150,16 +150,19 @@ async def keys(request: web.Request) -> web.Response:
 
     # get key type
     key_type = request.match_info["key_type"]
-    try:
-        if key_type.isdigit():
-            key_type = License.KeyContainer.KeyType.Name(int(key_type))
-        else:
-            License.KeyContainer.KeyType.Value(key_type)  # only test
-    except ValueError as e:
-        return web.json_response({
-            "status": 400,
-            "message": f"The Key Type value is invalid, {e}"
-        }, status=400)
+    if key_type == "ALL":
+        key_type = None
+    else:
+        try:
+            if key_type.isdigit():
+                key_type = License.KeyContainer.KeyType.Name(int(key_type))
+            else:
+                License.KeyContainer.KeyType.Value(key_type)  # only test
+        except ValueError as e:
+            return web.json_response({
+                "status": 400,
+                "message": f"The Key Type value is invalid, {e}"
+            }, status=400)
 
     # get cdm
     if session_id not in request.app["sessions"]:
@@ -183,7 +186,7 @@ async def keys(request: web.Request) -> web.Response:
             "permissions": key.permissions,
         }
         for key in cdm._sessions[session_id].keys
-        if key.type == key_type
+        if not key_type or key.type == key_type
     ]
 
     return web.json_response({
