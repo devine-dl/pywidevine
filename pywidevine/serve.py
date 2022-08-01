@@ -3,8 +3,6 @@ import sys
 from pathlib import Path
 from typing import Optional, Union
 
-from pywidevine.exceptions import TooManySessions, InvalidSession
-
 try:
     from aiohttp import web
 except ImportError:
@@ -15,8 +13,10 @@ except ImportError:
     )
     sys.exit(1)
 
+from pywidevine import __version__
 from pywidevine.cdm import Cdm
 from pywidevine.device import Device
+from pywidevine.exceptions import TooManySessions, InvalidSession
 from pywidevine.license_protocol_pb2 import LicenseType, License
 
 routes = web.RouteTableDef()
@@ -256,29 +256,37 @@ async def keys(request: web.Request) -> web.Response:
 
 @web.middleware
 async def authentication(request: web.Request, handler) -> web.Response:
-    secret_key = request.headers.get("X-Secret-Key")
-    if not secret_key:
-        request.app.logger.debug(f"{request.remote} did not provide authorization.")
-        return web.json_response({
-            "status": "401",
-            "message": "Secret Key is Empty."
-        }, status=401)
+    response = None
+    if request.path != "/":
+        secret_key = request.headers.get("X-Secret-Key")
+        if not secret_key:
+            request.app.logger.debug(f"{request.remote} did not provide authorization.")
+            response = web.json_response({
+                "status": "401",
+                "message": "Secret Key is Empty."
+            }, status=401)
+        elif secret_key not in request.app["config"]["users"]:
+            request.app.logger.debug(f"{request.remote} failed authentication with '{secret_key}'.")
+            response = web.json_response({
+                "status": "401",
+                "message": "Secret Key is Invalid, the Key is case-sensitive."
+            }, status=401)
 
-    if secret_key not in request.app["config"]["users"]:
-        request.app.logger.debug(f"{request.remote} failed authentication with '{secret_key}'.")
-        return web.json_response({
-            "status": "401",
-            "message": "Secret Key is Invalid, the Key is case-sensitive."
-        }, status=401)
+    if response is None:
+        try:
+            response = await handler(request)
+        except web.HTTPException as e:
+            request.app.logger.error(f"An unexpected error has occurred, {e}")
+            response = web.json_response({
+                "status": 500,
+                "message": e.reason
+            }, status=500)
 
-    try:
-        return await handler(request)
-    except web.HTTPException as e:
-        request.app.logger.error(f"An unexpected error has occurred, {e}")
-        return web.json_response({
-            "status": 500,
-            "message": e.reason
-        }, status=500)
+    response.headers.update({
+        "Server": f"https://github.com/rlaphoenix/pywidevine serve v{__version__}"
+    })
+
+    return response
 
 
 def run(config: dict, host: Optional[Union[str, web.HostSequence]] = None, port: Optional[int] = None):
