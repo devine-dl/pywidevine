@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from typing import Optional, Union
 
-from pywidevine.exceptions import TooManySessions
+from pywidevine.exceptions import TooManySessions, InvalidSession
 
 try:
     from aiohttp import web
@@ -83,6 +83,33 @@ async def open(request: web.Request) -> web.Response:
                 "security_level": cdm.device.security_level
             }
         }
+    })
+
+
+@routes.get("/{device}/close/{session_id}")
+async def close(request: web.Request) -> web.Response:
+    secret_key = request.headers["X-Secret-Key"]
+    device_name = request.match_info["device"]
+    session_id = bytes.fromhex(request.match_info["session_id"])
+
+    cdm = request.app["cdms"].get((secret_key, device_name))
+    if not cdm:
+        return web.json_response({
+            "status": 400,
+            "message": f"No Cdm session for {device_name} has been opened yet. No session to close."
+        }, status=400)
+
+    try:
+        cdm.close(session_id)
+    except InvalidSession as e:
+        return web.json_response({
+            "status": 400,
+            "message": str(e)
+        }, status=400)
+
+    return web.json_response({
+        "status": 200,
+        "message": f"Successfully closed Session '{session_id.hex()}'."
     })
 
 
