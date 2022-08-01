@@ -3,6 +3,8 @@ import sys
 from pathlib import Path
 from typing import Optional, Union
 
+from pywidevine.exceptions import TooManySessions
+
 try:
     from aiohttp import web
 except ImportError:
@@ -60,7 +62,14 @@ async def open(request: web.Request) -> web.Response:
     device = Device.load(request.app["config"]["devices"][device])
 
     cdm = Cdm(device)
-    session_id = cdm.open()
+    try:
+        session_id = cdm.open()
+    except TooManySessions as e:
+        return web.json_response({
+            "status": 400,
+            "message": str(e)
+        }, status=400)
+
     request.app["sessions"][session_id] = cdm
 
     return web.json_response({
