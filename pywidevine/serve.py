@@ -29,6 +29,9 @@ async def _startup(app: web.Application):
         for x in app["config"]["devices"]
         for path in [Path(x)]
     }
+    for device in app["config"]["devices"].values():
+        if not device.is_file():
+            raise FileNotFoundError(f"Device file does not exist: {device}")
 
 
 async def _cleanup(app: web.Application):
