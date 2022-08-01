@@ -1,5 +1,4 @@
 import logging
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -299,16 +298,8 @@ def serve_(config: Path, host: str, port: int):
     Host as 127.0.0.1 may block remote access even if port-forwarded.
     Instead, use 0.0.0.0 and ensure the TCP port you choose is forwarded.
     """
-    try:
-        import yaml
-        from pywidevine import serve
-    except ImportError:
-        print(
-            "Missing the extra dependencies for serve functionality. "
-            "You may install them under poetry with `poetry install -E serve`, "
-            "or under pip with `pip install pywidevine[serve]`."
-        )
-        sys.exit(1)
+    from pywidevine import serve
+    import yaml
 
     config = yaml.safe_load(config.read_text(encoding="utf8"))
     serve.run(config, host, port)
