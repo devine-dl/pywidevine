@@ -23,7 +23,7 @@ routes = web.RouteTableDef()
 
 
 async def _startup(app: web.Application):
-    app["cdms"]: dict[str, Cdm] = {}
+    app["cdms"]: dict[tuple[str, str], Cdm] = {}
     app["config"]["devices"] = {
         path.stem: path
         for x in app["config"]["devices"]
@@ -46,24 +46,24 @@ async def ping(_) -> web.Response:
     })
 
 
-@routes.get("/open/{device}")
+@routes.get("/{device}/open")
 async def open(request: web.Request) -> web.Response:
     secret_key = request.headers["X-Secret-Key"]
+    device_name = request.match_info["device"]
     user = request.app["config"]["users"][secret_key]
-    device = request.match_info["device"]
 
-    if device not in user["devices"] or device not in request.app["config"]["devices"]:
+    if device_name not in user["devices"] or device_name not in request.app["config"]["devices"]:
         # we don't want to be verbose with the error as to not reveal device names
         # by trial and error to users that are not authorized to use them
         return web.json_response({
             "status": 403,
-            "message": f"Device '{device}' is not found or you are not authorized to use it."
+            "message": f"Device '{device_name}' is not found or you are not authorized to use it."
         }, status=403)
 
-    cdm = request.app["cdms"].get(secret_key)
+    cdm = request.app["cdms"].get((secret_key, device_name))
     if not cdm:
-        device = Device.load(request.app["config"]["devices"][device])
-        cdm = request.app["cdms"][secret_key] = Cdm(device)
+        device = Device.load(request.app["config"]["devices"][device_name])
+        cdm = request.app["cdms"][(secret_key, device_name)] = Cdm(device)
 
     try:
         session_id = cdm.open()
@@ -86,9 +86,10 @@ async def open(request: web.Request) -> web.Response:
     })
 
 
-@routes.post("/challenge/{license_type}")
+@routes.post("/{device}/challenge/{license_type}")
 async def challenge(request: web.Request) -> web.Response:
     secret_key = request.headers["X-Secret-Key"]
+    device_name = request.match_info["device"]
 
     body = await request.json()
     for required_field in ("session_id", "init_data"):
@@ -102,8 +103,14 @@ async def challenge(request: web.Request) -> web.Response:
     session_id = bytes.fromhex(body["session_id"])
 
     # get cdm
-    cdm = request.app["cdms"].get(secret_key)
-    if not cdm or session_id not in cdm._sessions:
+    cdm = request.app["cdms"].get((secret_key, device_name))
+    if not cdm:
+        return web.json_response({
+            "status": 400,
+            "message": f"No Cdm session for {device_name} has been opened yet. No session to use."
+        }, status=400)
+
+    if session_id not in cdm._sessions:
         # This can happen if:
         # - API server gets shutdown/restarted,
         # - The user calls /challenge before /open,
@@ -141,9 +148,10 @@ async def challenge(request: web.Request) -> web.Response:
     }, status=200)
 
 
-@routes.post("/keys/{key_type}")
+@routes.post("/{device}/keys/{key_type}")
 async def keys(request: web.Request) -> web.Response:
     secret_key = request.headers["X-Secret-Key"]
+    device_name = request.match_info["device"]
 
     body = await request.json()
     for required_field in ("session_id", "license_message"):
@@ -173,8 +181,14 @@ async def keys(request: web.Request) -> web.Response:
             }, status=400)
 
     # get cdm
-    cdm = request.app["cdms"].get(secret_key)
-    if not cdm or session_id not in cdm._sessions:
+    cdm = request.app["cdms"].get((secret_key, device_name))
+    if not cdm:
+        return web.json_response({
+            "status": 400,
+            "message": f"No Cdm session for {device_name} has been opened yet. No session to use."
+        }, status=400)
+
+    if session_id not in cdm._sessions:
         # This can happen if:
         # - API server gets shutdown/restarted,
         # - The user calls /challenge before /open,
