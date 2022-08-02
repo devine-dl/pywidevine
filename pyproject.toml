@@ -24,6 +24,7 @@ classifiers = [
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/rlaphoenix/pywidevine/issues"
 "Forums" = "https://github.com/rlaphoenix/pywidevine/discussions"
+"Changelog" = "https://github.com/rlaphoenix/pywidevine/blob/master/CHANGELOG.md"
 
 [tool.poetry.dependencies]
 python = ">=3.7,<3.11"
