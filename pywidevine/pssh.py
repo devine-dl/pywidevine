@@ -112,7 +112,7 @@ class PSSH:
         if isinstance(data, bytes):
             try:
                 data = Box.parse(data)
-            except construct.ConstructError:
+            except (IOError, construct.ConstructError):
                 if strict:
                     try:
                         cenc_header = WidevinePsshData()
