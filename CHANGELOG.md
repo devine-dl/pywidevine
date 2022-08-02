@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2022-08-02
+
+This release is primarily a maintenance release for `serve` functionality but some Cdm fixes are also present.
+
+### Added
+
+- You can now return all License Keys from Serve's `/keys` endpoint by supplying `ALL` as the key type.
+  This adds support for Exchange Systems like Netflix's WidevineExchange MSL scheme. I recommend using `ALL` unless
+  you only want `CONTENT` keys and will not be using any other type of keys including `SIGNING` and `OPERATOR_SESSION`.
+- Serve now has a `/close` endpoint to close a session. The Cdm has a limit of 50 sessions per user.
+- Serve now responds with a `Server` header denoting that pywidevine serve is being used, also specifying the version.
+  This allows Clients to selectively support APIs based on version, and also verify the API as being supported at all.
+- Serve now verifies that all Devices in config actually exist before letting you start serving.
+
+### Changed
+
+- Downgraded lxml to >=4.8.0 to support projects using pycaption, which is likely considering the project's topic.
+- All of Serve's endpoints now have a `/{device}` prefix. E.g., instead of `/challenge/STREAMING`, it's now
+  `/device_name/challenge/STREAMING`. This is to support a multi-device per-user Cdm setup, see Fixed below regarding
+  Serve's Cdm objects.
+
+### Fixed
+
+- Fixed support for Raw PSSH values, e.g., Netflix's WidevineExchange MSL Scheme arbitrary init_data value.
+- The Service Certificate is now saved to the Session in full SignedMessage form instead of just the underlying
+  DrmCertificate. This is so any class inheriting the Cdm (e.g., for Remote capabilities) can sufficiently use
+  and supply the service certificate while being signed.
+- Serve's /open endpoint will now return a 400 error if there's too many sessions opened.
+- Serve's Cdm objects with Device initialized are now stored per-user and device name. This fixes the issue where the
+  entire user base has only 50 sessions available to be used. Effectively rate limiting to only 50 users at a time.
+  Since /close endpoint was not implemented yet, there was no way to even close effectively meaning only 50 uses could
+  be done.
+
 ## [1.2.0] - 2022-07-30
 
 ### Added
@@ -110,6 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial Release.
 
+[1.2.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.2.1
 [1.2.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.2.0
 [1.1.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.1.1
 [1.1.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.1.0
