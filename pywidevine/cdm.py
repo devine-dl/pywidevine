@@ -66,7 +66,7 @@ class Cdm:
 
     def __init__(
         self,
-        device_type: Device.Types,
+        device_type: Union[Device.Types, str],
         system_id: int,
         security_level: int,
         client_id: ClientIdentification,
@@ -75,6 +75,8 @@ class Cdm:
         """Initialize a Widevine Content Decryption Module (CDM)."""
         if not device_type:
             raise ValueError("Device Type must be provided")
+        if isinstance(device_type, str):
+            device_type = Device.Types[device_type]
         if not isinstance(device_type, Device.Types):
             raise TypeError(f"Expected device_type to be a {Device.Types!r} not {device_type!r}")
 
