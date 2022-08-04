@@ -32,3 +32,7 @@ class SignatureMismatch(PyWidevineException):
 
 class NoKeysLoaded(PyWidevineException):
     """No License was parsed for this Session, No Keys available."""
+
+
+class DeviceMismatch(PyWidevineException):
+    """The Remote CDMs Device information and the APIs Device information did not match."""
