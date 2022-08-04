@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import re
 from typing import Union, Optional
 
 import requests
@@ -82,9 +83,12 @@ class RemoteCdm(Cdm):
         if r.status_code != 200:
             raise ValueError(f"Could not test Remote API version [{r.status_code}]")
         server = r.headers.get("Server")
-        if not server or not server.startswith("https://github.com/rlaphoenix/pywidevine serve"):
+        if not server or "pywidevine serve" not in server.lower():
             raise ValueError(f"This Remote CDM API does not seem to be a pywidevine serve API ({server}).")
-        server_version = server.split("v")[-1]
+        server_version = re.search(r"pywidevine serve v([\d.]+)", server, re.IGNORECASE)
+        if not server_version:
+            raise ValueError(f"The pywidevine server API is not stating the version correctly, cannot continue.")
+        server_version = server_version.group(1)
         if server_version < "1.3.0":
             raise ValueError(f"This pywidevine serve API version ({server_version}) is not supported.")
 
