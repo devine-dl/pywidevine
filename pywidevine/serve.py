@@ -116,6 +116,58 @@ async def close(request: web.Request) -> web.Response:
     })
 
 
+@routes.post("/{device}/set_service_certificate")
+async def set_service_certificate(request: web.Request) -> web.Response:
+    secret_key = request.headers["X-Secret-Key"]
+    device_name = request.match_info["device"]
+
+    body = await request.json()
+    for required_field in ("session_id", "certificate"):
+        if required_field == "certificate":
+            has_field = required_field in body  # it needs the key, but can be empty/null
+        else:
+            has_field = body.get(required_field)
+        if not has_field:
+            return web.json_response({
+                "status": 400,
+                "message": f"Missing required field '{required_field}' in JSON body."
+            }, status=400)
+
+    # get session id
+    session_id = bytes.fromhex(body["session_id"])
+
+    # get cdm
+    cdm = request.app["cdms"].get((secret_key, device_name))
+    if not cdm:
+        return web.json_response({
+            "status": 400,
+            "message": f"No Cdm session for {device_name} has been opened yet. No session to use."
+        }, status=400)
+
+    if session_id not in cdm._sessions:
+        # This can happen if:
+        # - API server gets shutdown/restarted,
+        # - The user calls /challenge before /open,
+        # - The user called /open on a different IP Address
+        # - The user closed the session
+        return web.json_response({
+            "status": 400,
+            "message": "Invalid Session ID. Session ID may have Expired."
+        }, status=400)
+
+    # set service certificate
+    certificate = body.get("certificate")
+    provider_id = cdm.set_service_certificate(session_id, certificate)
+
+    return web.json_response({
+        "status": 200,
+        "message": f"Successfully {['set', 'unset'][not certificate]} the Service Certificate.",
+        "data": {
+            "provider_id": provider_id
+        }
+    })
+
+
 @routes.post("/{device}/challenge/{license_type}")
 async def challenge(request: web.Request) -> web.Response:
     secret_key = request.headers["X-Secret-Key"]
@@ -151,15 +203,12 @@ async def challenge(request: web.Request) -> web.Response:
             "message": "Invalid Session ID. Session ID may have Expired."
         }, status=400)
 
-    # set service certificate
-    service_certificate = body.get("service_certificate")
-    if request.app["config"]["force_privacy_mode"] and not service_certificate:
+    # enforce service certificate (opt-in)
+    if request.app["config"]["force_privacy_mode"] and not cdm._sessions[session_id].service_certificate:
         return web.json_response({
             "status": 403,
-            "message": "No Service Certificate provided but Privacy Mode is Enforced."
+            "message": "No Service Certificate set but Privacy Mode is Enforced."
         }, status=403)
-    if service_certificate:
-        cdm.set_service_certificate(session_id, service_certificate)
 
     # get challenge
     license_request = cdm.get_license_challenge(
