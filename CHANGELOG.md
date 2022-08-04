@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2022-08-04
+
+### Added
+
+- New RemoteCdm class to be used as Client code for the `serve` Remote CDM API server. The RemoteCdm should be used
+  entirely separately from the normal Cdm class. All serve APIs must update to v1.3.0 to be compatible. The RemoteCdm
+  verifies the server version to ensure compatibility. Changes to the serve API schema will be immediately reflected in
+  the RemoteCdm code in the future.
+- Implemented `/set_service_certificate` endpoint in serve schema as an improved way of setting the service certificate
+  than passing it to `/challenge`.
+- You can now unset the service certificate by providing an empty service certificate value (or None or null). This
+  includes support for doing so even in serve API and the new RemoteCdm.
+
+### Changed
+
+- The Construction of the Cdm object has changed. You can now initialize it with more direct values if you don't want
+  to use the Device class or don't want to use `.wvd` files. To use Device classes, you must now use the
+  `Cdm.from_device()` class method.
+- The ability to pass the certificate to `/challenge` has been removed. Please use the new `/set_service_certificate`
+  endpoint before calling `/challenge`. You do not need to set it every time. Once per session is enough unless you
+  now want to use a different certificate.
+
 ## [1.2.1] - 2022-08-02
 
 This release is primarily a maintenance release for `serve` functionality but some Cdm fixes are also present.
@@ -143,6 +165,7 @@ This release is primarily a maintenance release for `serve` functionality but so
 
 Initial Release.
 
+[1.3.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.3.0
 [1.2.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.2.1
 [1.2.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.2.0
 [1.1.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.1.1
