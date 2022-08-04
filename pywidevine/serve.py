@@ -66,7 +66,7 @@ async def open(request: web.Request) -> web.Response:
     cdm = request.app["cdms"].get((secret_key, device_name))
     if not cdm:
         device = Device.load(request.app["config"]["devices"][device_name])
-        cdm = request.app["cdms"][(secret_key, device_name)] = Cdm(device)
+        cdm = request.app["cdms"][(secret_key, device_name)] = Cdm.from_device(device)
 
     try:
         session_id = cdm.open()
@@ -82,8 +82,8 @@ async def open(request: web.Request) -> web.Response:
         "data": {
             "session_id": session_id.hex(),
             "device": {
-                "system_id": cdm.device.system_id,
-                "security_level": cdm.device.security_level
+                "system_id": cdm.system_id,
+                "security_level": cdm.security_level
             }
         }
     })

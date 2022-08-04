@@ -68,7 +68,7 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
     log.debug(device)
 
     # load cdm
-    cdm = Cdm(device)
+    cdm = Cdm.from_device(device)
     log.info(f"[+] Loaded CDM")
     log.debug(cdm)
 
