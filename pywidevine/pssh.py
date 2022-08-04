@@ -47,7 +47,7 @@ class PSSH:
         cenc_header.algorithm = 1  # 0=Clear, 1=AES-CTR
 
         for key_id in key_ids:
-            cenc_header.key_id.append(key_id.bytes)
+            cenc_header.key_ids.append(key_id.bytes)
         if box.version == 1:
             # ensure both cenc header and box has same Key IDs
             # v1 uses both this and within init data for basically no reason
@@ -66,7 +66,7 @@ class PSSH:
         """
         cenc_header = WidevinePsshData()
         for key_id in key_ids:
-            cenc_header.key_id.append(key_id.bytes)
+            cenc_header.key_ids.append(key_id.bytes)
         cenc_header.algorithm = 1  # 0=Clear, 1=AES-CTR
 
         box = Box.parse(Box.build(dict(
@@ -153,7 +153,7 @@ class PSSH:
             return [
                 # the key_ids value may or may not be hex underlying
                 UUID(bytes=key_id) if len(key_id) == 16 else UUID(hex=key_id.decode())
-                for key_id in init.key_id
+                for key_id in init.key_ids
             ]
 
         if box.system_ID == PSSH.SystemId.PlayReady:
@@ -192,12 +192,12 @@ class PSSH:
         init.ParseFromString(box.init_data)
 
         # TODO: Is there a better way to clear the Key IDs?
-        for _ in range(len(init.key_id or [])):
-            init.key_id.pop(0)
+        for _ in range(len(init.key_ids or [])):
+            init.key_ids.pop(0)
 
         # TODO: Is there a .extend or a way to add all without a loop?
         for key_id in key_ids:
-            init.key_id.append(key_id.bytes)
+            init.key_ids.append(key_id.bytes)
 
         box.init_data = init.SerializeToString()
 
