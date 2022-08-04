@@ -204,7 +204,7 @@ async def challenge(request: web.Request) -> web.Response:
         }, status=400)
 
     # enforce service certificate (opt-in)
-    if request.app["config"]["force_privacy_mode"] and not cdm._sessions[session_id].service_certificate:
+    if request.app["config"].get("force_privacy_mode") and not cdm._sessions[session_id].service_certificate:
         return web.json_response({
             "status": 403,
             "message": "No Service Certificate set but Privacy Mode is Enforced."
