@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2022-08-04
+
+### Added
+
+- Cdm and RemoteCdm can now be supplied a string value for `device_type` for scenarios where providing it as a string
+  is more convenient (e.g., from Config files).
+
+### Fixed
+
+- The `force_privacy_mode` key no longer needs to be defined at all in the configuration file. This was previously
+  crashing serve APIs if it wasn't set before starting.
+- RemoteCdm's Server version check will no longer fail under certain serving conditions e.g., Caddy prepending `Caddy`
+  to the Server header value. It also fixes case sensitivity and removed the full url from the header.
+
 ## [1.3.0] - 2022-08-04
 
 ### Added
@@ -165,6 +179,7 @@ This release is primarily a maintenance release for `serve` functionality but so
 
 Initial Release.
 
+[1.3.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.3.1
 [1.3.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.3.0
 [1.2.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.2.1
 [1.2.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.2.0
