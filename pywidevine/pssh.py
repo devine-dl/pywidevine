@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import base64
 import binascii
-from typing import Union
+import string
+from typing import Union, Optional
 from uuid import UUID
 
 import construct
@@ -97,6 +98,86 @@ class PSSH:
         self.system_id = box.system_ID
         self.key_ids = box.key_IDs
         self.init_data = box.init_data
+
+    @classmethod
+    def new(
+        cls,
+        key_ids: Optional[list[Union[UUID, str, bytes]]] = None,
+        init_data: Optional[Union[WidevinePsshData, str, bytes]] = None,
+        version: int = 0,
+        flags: int = 0
+    ) -> PSSH:
+        """Craft a new version 0 or 1 PSSH Box."""
+        if key_ids is not None:
+            if not isinstance(key_ids, list):
+                raise TypeError(f"Expected key_ids to be a list not {key_ids!r}")
+
+        if init_data is not None:
+            if not isinstance(init_data, (WidevinePsshData, str, bytes)):
+                raise TypeError(f"Expected init_data to be a {WidevinePsshData}, base64, or bytes, not {init_data!r}")
+
+        if not isinstance(version, int):
+            raise TypeError(f"Expected version to be an int not {version!r}")
+        if version not in (0, 1):
+            raise ValueError(f"Invalid version, must be either 0 or 1, not {version}.")
+
+        if not isinstance(flags, int):
+            raise TypeError(f"Expected flags to be an int not {flags!r}")
+        if flags < 0:
+            raise ValueError(f"Invalid flags, cannot be less than 0.")
+
+        if version == 0:
+            if key_ids is not None:
+                raise ValueError("Version 0 PSSH boxes must use init_data only, not key_ids.")
+            if init_data is None:
+                raise ValueError("Version 0 PSSH boxes must use init_data but it wasn't provided.")
+        elif version == 1:
+            # TODO: I cannot tell if they need either init_data or key_ids exclusively, or both is fine
+            #       So for now I will just make sure at least one is supplied
+            if init_data is None and key_ids is None:
+                raise ValueError("Version 1 PSSH boxes must use either init_data or key_ids but neither were provided")
+
+        if key_ids is not None:
+            # ensure key_ids are bytes, supports hex, base64, and bytes
+            key_ids = [
+                (
+                    x.bytes if isinstance(x, UUID) else
+                    bytes.fromhex(x) if all(c in string.hexdigits for c in x) else
+                    base64.b64decode(x) if isinstance(x, str) else
+                    x
+                )
+                for x in key_ids
+            ]
+            if not all(isinstance(x, bytes) for x in key_ids):
+                not_bytes = [x for x in key_ids if not isinstance(x, bytes)]
+                raise TypeError(
+                    "Expected all of key_ids to be a UUID, hex, base64, or bytes, but one or more are not, "
+                    f"{not_bytes!r}"
+                )
+
+        if init_data is not None:
+            if isinstance(init_data, WidevinePsshData):
+                init_data = init_data.SerializeToString()
+            elif isinstance(init_data, str):
+                if all(c in string.hexdigits for c in init_data):
+                    init_data = bytes.fromhex(init_data)
+                else:
+                    init_data = base64.b64decode(init_data)
+            elif not isinstance(init_data, bytes):
+                raise TypeError(
+                    f"Expecting init_data to be {WidevinePsshData}, hex, base64, or bytes, not {init_data!r}"
+                )
+
+        box = Box.parse(Box.build(dict(
+            type=b"pssh",
+            version=version,
+            flags=flags,
+            system_ID=PSSH.SystemId.Widevine,
+            key_ids=[key_ids, b""][key_ids is None],
+            init_data=[init_data, b""][init_data is None]
+        )))
+
+        return cls(box)
 
     @staticmethod
     def from_playready_pssh(box: Container) -> Container:
