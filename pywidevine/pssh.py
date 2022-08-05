@@ -214,26 +214,6 @@ class PSSH:
         return cls(box)
 
     @staticmethod
-    def from_key_ids(key_ids: list[UUID]) -> Container:
-        """
-        Craft a new PSSH Box from just Key IDs.
-        This should only be used as a very last measure.
-        """
-        cenc_header = WidevinePsshData()
-        for key_id in key_ids:
-            cenc_header.key_ids.append(key_id.bytes)
-        cenc_header.algorithm = 1  # 0=Clear, 1=AES-CTR
-
-        box = Box.parse(Box.build(dict(
-            type=b"pssh",
-            version=0,
-            flags=0,
-            system_ID=PSSH.SystemId.Widevine,
-            init_data=cenc_header.SerializeToString()
-        )))
-
-        return box
-    @staticmethod
     def get_key_ids(box: Container) -> list[UUID]:
         """
         Get Key IDs from a PSSH Box from within the Box or Init Data where possible.
