@@ -21,8 +21,82 @@ class PSSH:
         Widevine = UUID(bytes=b"\xed\xef\x8b\xa9\x79\xd6\x4a\xce\xa3\xc8\x27\xdc\xd5\x1d\x21\xed")
         PlayReady = UUID(bytes=b"\x9a\x04\xf0\x79\x98\x40\x42\x86\xab\x92\xe6\x5b\xe0\x88\x5f\x95")
 
-    def __init__(self, box: Container):
-        self._box = box
+    def __init__(self, data: Union[Container, str, bytes], strict: bool = False):
+        """
+        Load a PSSH box or Widevine Cenc Header data as a new v0 PSSH box.
+
+        [Strict mode (strict=True)]
+
+        Supports the following forms of input data in either Base64 or Bytes form:
+        - Full PSSH mp4 boxes (as defined by pymp4 Box).
+        - Full Widevine Cenc Headers (as defined by WidevinePsshData proto).
+
+        [Lenient mode (strict=False, default)]
+
+        If the data is not supported in Strict mode, and is assumed not to be corrupt or
+        parsed incorrectly, the License Server likely accepts a custom init_data value
+        during a License Request call. This is uncommon behavior but not out of realm of
+        possibilities. For example, Netflix does this with it's MSL WidevineExchange
+        scheme.
+
+        Lenient mode will craft a new v0 PSSH box with the init_data field set to
+        the provided data as-is. The data will first be base64 decoded. This behavior
+        may not work in your scenario and if that's the case please manually craft
+        your own PSSH box with the init_data field to be used in License Requests.
+
+        Raises:
+            ValueError: If the data is empty.
+            TypeError: If the data is an unexpected type.
+            binascii.Error: If the data could not be decoded as Base64 if provided as a
+                string.
+            DecodeError: If the data could not be parsed as a PSSH mp4 box nor a Widevine
+                Cenc Header and strict mode is enabled.
+        """
+        if not data:
+            raise ValueError("Data must not be empty.")
+
+        if isinstance(data, Container):
+            box = data
+        else:
+            if isinstance(data, str):
+                try:
+                    data = base64.b64decode(data)
+                except (binascii.Error, binascii.Incomplete) as e:
+                    raise binascii.Error(f"Could not decode data as Base64, {e}")
+
+            if not isinstance(data, bytes):
+                raise TypeError(f"Expected data to be a {Container}, bytes, or base64, not {data!r}")
+
+            try:
+                box = Box.parse(data)
+            except (IOError, construct.ConstructError):  # not a box
+                try:
+                    cenc_header = WidevinePsshData()
+                    cenc_header.ParseFromString(data)
+                    cenc_header = cenc_header.SerializeToString()
+                    if cenc_header != data:  # not actually a WidevinePsshData
+                        raise DecodeError()
+                except DecodeError:  # not a widevine cenc header
+                    if strict:
+                        raise DecodeError(f"Could not parse data as a {Container} nor a {WidevinePsshData}.")
+                    # Data is not a Widevine Cenc Header, it's something custom.
+                    # The license server likely has something custom to parse it.
+                    # See doc-string about Lenient mode for more information.
+                    cenc_header = data
+
+                box = Box.parse(Box.build(dict(
+                    type=b"pssh",
+                    version=0,
+                    flags=0,
+                    system_ID=PSSH.SystemId.Widevine,
+                    init_data=cenc_header
+                )))
+
+        self.version = box.version
+        self.flags = box.flags
+        self.system_id = box.system_ID
+        self.key_ids = box.key_IDs
+        self.init_data = box.init_data
 
     @staticmethod
     def from_playready_pssh(box: Container) -> Container:
@@ -78,62 +152,6 @@ class PSSH:
         )))
 
         return box
-
-    @staticmethod
-    def get_as_box(data: Union[Container, bytes, str], strict: bool = False) -> Container:
-        """
-        Get possibly arbitrary data as a parsed PSSH mp4 box.
-
-        Parameters:
-            data: PSSH mp4 box, Widevine Cenc Header (init data), or arbitrary data to
-                parse or craft into a PSSH mp4 box.
-            strict: Do not return a PSSH box for arbitrary data. Require the data to be
-                at least a PSSH mp4 box, or a Widevine Cenc Header.
-
-        Raises:
-            ValueError: If the data is empty, or an unexpected type.
-            binascii.Error: If the data could not be decoded as Base64 if provided
-                as a string.
-            DecodeError: If the data could not be parsed as a PSSH mp4 box
-                nor a Widevine Cenc Header while strict=True.
-        """
-        if not data:
-            raise ValueError("Data must not be empty.")
-
-        if isinstance(data, Container):
-            return data
-
-        if isinstance(data, str):
-            try:
-                data = base64.b64decode(data)
-            except (binascii.Error, binascii.Incomplete) as e:
-                raise binascii.Error(f"Could not decode data as Base64, {e}")
-
-        if isinstance(data, bytes):
-            try:
-                data = Box.parse(data)
-            except (IOError, construct.ConstructError):
-                if strict:
-                    try:
-                        cenc_header = WidevinePsshData()
-                        if cenc_header.MergeFromString(data) < len(data):
-                            raise DecodeError()
-                    except DecodeError:
-                        raise DecodeError(f"Could not parse data as a PSSH mp4 box nor a Widevine Cenc Header.")
-                    else:
-                        data = cenc_header.SerializeToString()
-                data = Box.parse(Box.build(dict(
-                    type=b"pssh",
-                    version=0,
-                    flags=0,
-                    system_ID=PSSH.SystemId.Widevine,
-                    init_data=data
-                )))
-        else:
-            raise ValueError(f"Data is an unexpected type, expected bytes got {data!r}.")
-
-        return data
-
     @staticmethod
     def get_key_ids(box: Container) -> list[UUID]:
         """

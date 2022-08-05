@@ -268,7 +268,7 @@ class Cdm:
         if not init_data:
             raise InvalidInitData("The init_data must not be empty.")
         try:
-            init_data = PSSH.get_as_box(init_data).init_data
+            init_data = PSSH(init_data).init_data
         except (ValueError, binascii.Error, DecodeError) as e:
             raise InvalidInitData(str(e))
 
