@@ -270,13 +270,10 @@ class PSSH:
         init = WidevinePsshData()
         init.ParseFromString(box.init_data)
 
-        # TODO: Is there a better way to clear the Key IDs?
-        for _ in range(len(init.key_ids or [])):
-            init.key_ids.pop(0)
-
-        # TODO: Is there a .extend or a way to add all without a loop?
-        for key_id in key_ids:
-            init.key_ids.append(key_id.bytes)
+        init.key_ids[:] = [
+            key_id.bytes
+            for key_id in key_ids
+        ]
 
         box.init_data = init.SerializeToString()
 
