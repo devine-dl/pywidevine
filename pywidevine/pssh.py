@@ -213,6 +213,21 @@ class PSSH:
 
         return cls(box)
 
+    def dump(self) -> bytes:
+        """Export the PSSH object as a full PSSH box in bytes form."""
+        return Box.build(dict(
+            type=b"pssh",
+            version=self.version,
+            flags=self.flags,
+            system_ID=self.system_id,
+            key_IDs=self.key_ids,
+            init_data=self.init_data
+        ))
+
+    def dumps(self) -> str:
+        """Export the PSSH object as a full PSSH box in base64 form."""
+        return base64.b64encode(self.dump()).decode()
+
     @staticmethod
     def get_key_ids(box: Container) -> list[UUID]:
         """
