@@ -126,11 +126,9 @@ class PSSH:
         if flags < 0:
             raise ValueError(f"Invalid flags, cannot be less than 0.")
 
-        if version == 0:
-            if key_ids is not None:
-                raise ValueError("Version 0 PSSH boxes must use init_data only, not key_ids.")
-            if init_data is None:
-                raise ValueError("Version 0 PSSH boxes must use init_data but it wasn't provided.")
+        if version == 0 and key_ids is not None and init_data is not None:
+            # v0 boxes use only init_data in the pssh field, but we can use the key_ids within the init_data
+            raise ValueError("Version 0 PSSH boxes must use only init_data, not init_data and key_ids.")
         elif version == 1:
             # TODO: I cannot tell if they need either init_data or key_ids exclusively, or both is fine
             #       So for now I will just make sure at least one is supplied
@@ -176,6 +174,9 @@ class PSSH:
             key_ids=[key_ids, b""][key_ids is None],
             init_data=[init_data, b""][init_data is None]
         )))
+
+        if key_ids and version == 0:
+            PSSH.overwrite_key_ids(box, [UUID(bytes=x) for x in key_ids])
 
         return cls(box)
 
