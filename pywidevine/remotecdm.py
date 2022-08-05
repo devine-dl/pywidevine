@@ -153,7 +153,7 @@ class RemoteCdm(Cdm):
     def get_license_challenge(
         self,
         session_id: bytes,
-        init_data: Union[Container, bytes, str],
+        pssh: PSSH,
         type_: Union[int, str] = LicenseType.STREAMING,
         privacy_mode: bool = True
     ) -> bytes:
@@ -161,12 +161,10 @@ class RemoteCdm(Cdm):
         if not session:
             raise InvalidSession(f"Session identifier {session_id!r} is invalid.")
 
-        if not init_data:
-            raise InvalidInitData("The init_data must not be empty.")
-        try:
-            init_data = PSSH(init_data).init_data
-        except (ValueError, binascii.Error, DecodeError) as e:
-            raise InvalidInitData(str(e))
+        if not pssh:
+            raise InvalidInitData("A pssh must be provided.")
+        if not isinstance(pssh, PSSH):
+            raise InvalidInitData(f"Expected pssh to be a {PSSH}, not {pssh!r}")
 
         try:
             if isinstance(type_, int):
@@ -184,7 +182,7 @@ class RemoteCdm(Cdm):
             url=f"{self.host}/{self.device_name}/challenge/{type_}",
             json={
                 "session_id": session_id.hex(),
-                "init_data": base64.b64encode(init_data).decode()
+                "init_data": pssh.dumps()
             }
         )
         if r.status_code != 200:

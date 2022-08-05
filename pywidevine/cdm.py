@@ -235,7 +235,7 @@ class Cdm:
     def get_license_challenge(
         self,
         session_id: bytes,
-        init_data: Union[Container, bytes, str],
+        pssh: PSSH,
         type_: Union[int, str] = LicenseType.STREAMING,
         privacy_mode: bool = True
     ) -> bytes:
@@ -244,8 +244,7 @@ class Cdm:
 
         Parameters:
             session_id: Session identifier.
-            init_data: Widevine Cenc Header (Init Data) or a Protection System Specific
-                Header Box to take the init data from.
+            pssh: PSSH Object to get the init data from.
             type_: Type of License you wish to exchange, often `STREAMING`. The `OFFLINE`
                 Licenses are for Offline licensing of Downloaded content.
             privacy_mode: Encrypt the Client ID using the Privacy Certificate. If the
@@ -265,12 +264,10 @@ class Cdm:
         if not session:
             raise InvalidSession(f"Session identifier {session_id!r} is invalid.")
 
-        if not init_data:
-            raise InvalidInitData("The init_data must not be empty.")
-        try:
-            init_data = PSSH(init_data).init_data
-        except (ValueError, binascii.Error, DecodeError) as e:
-            raise InvalidInitData(str(e))
+        if not pssh:
+            raise InvalidInitData("A pssh must be provided.")
+        if not isinstance(pssh, PSSH):
+            raise InvalidInitData(f"Expected pssh to be a {PSSH}, not {pssh!r}")
 
         try:
             if isinstance(type_, int):
@@ -290,7 +287,9 @@ class Cdm:
         license_request.protocol_version = ProtocolVersion.Value("VERSION_2_1")
         license_request.key_control_nonce = random.randrange(1, 2 ** 31)
 
-        license_request.content_id.widevine_pssh_data.pssh_data.append(init_data)
+        # pssh_data may be either a WidevineCencHeader or custom data
+        # we have to assume the pssh.init_data value is valid, we cannot test
+        license_request.content_id.widevine_pssh_data.pssh_data.append(pssh.init_data)
         license_request.content_id.widevine_pssh_data.license_type = type_
         license_request.content_id.widevine_pssh_data.request_id = request_id
 

@@ -13,6 +13,7 @@ from pywidevine import __version__
 from pywidevine.cdm import Cdm
 from pywidevine.device import Device
 from pywidevine.license_protocol_pb2 import LicenseType, FileHashes
+from pywidevine.pssh import PSSH
 
 
 @click.group(invoke_without_command=True)
@@ -61,6 +62,9 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
     This is also a great way of showing you how to use pywidevine in your own projects.
     """
     log = logging.getLogger("license")
+
+    # prepare pssh
+    pssh = PSSH(pssh)
 
     # load device
     device = Device.load(device)

@@ -3,6 +3,8 @@ import sys
 from pathlib import Path
 from typing import Optional, Union
 
+from pywidevine.pssh import PSSH
+
 try:
     from aiohttp import web
 except ImportError:
@@ -210,10 +212,13 @@ async def challenge(request: web.Request) -> web.Response:
             "message": "No Service Certificate set but Privacy Mode is Enforced."
         }, status=403)
 
+    # get init data
+    init_data = PSSH(body["init_data"])
+
     # get challenge
     license_request = cdm.get_license_challenge(
         session_id=session_id,
-        init_data=body["init_data"],
+        pssh=init_data,
         type_=LicenseType.Value(request.match_info["license_type"]),
         privacy_mode=True
     )
