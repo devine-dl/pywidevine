@@ -179,14 +179,14 @@ class PSSH:
 
         return cls(box)
 
-    @staticmethod
-    def from_playready_pssh(box: Container) -> Container:
+    @classmethod
+    def from_playready_pssh(cls, box: Container) -> PSSH:
         """
-        Convert a PlayReady PSSH to a Widevine PSSH.
+        Convert a PlayReady PSSH Box to a Widevine PSSH Box.
 
         Note: The resulting Widevine PSSH will likely not be usable for Licensing. This
-        is because there is some data for a Widevine CENC Header that is not going to be
-        listed in a PlayReady PSSH.
+        is because there is some data for a Widevine Cenc Header that is missing from a
+        PlayReady PSSH Box.
 
         This converted PSSH will only be useful for it's Key IDs, so realistically only
         for matching Key IDs with a Track. As a fallback.
@@ -211,7 +211,7 @@ class PSSH:
         box.init_data = cenc_header.SerializeToString()
         box.system_ID = PSSH.SystemId.Widevine
 
-        return box
+        return cls(box)
 
     @staticmethod
     def from_key_ids(key_ids: list[UUID]) -> Container:
