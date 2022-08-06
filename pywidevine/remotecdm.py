@@ -248,5 +248,38 @@ class RemoteCdm(Cdm):
             for key in r["keys"]
         ]
 
+    def get_keys(self, session_id: bytes, type_: Optional[Union[int, str]] = None) -> list[Key]:
+        try:
+            if isinstance(type_, str):
+                License.KeyContainer.KeyType.Value(type_)  # only test
+            elif isinstance(type_, int):
+                type_ = License.KeyContainer.KeyType.Name(type_)
+            elif type_ is None:
+                type_ = "ALL"
+            else:
+                raise TypeError(f"Expected type_ to be a {License.KeyContainer.KeyType} or int, not {type_!r}")
+        except ValueError as e:
+            raise ValueError(f"Could not parse type_ as a {License.KeyContainer.KeyType}, {e}")
+
+        r = self.__session.post(
+            url=f"{self.host}/{self.device_name}/get_keys/{type_}",
+            json={
+                "session_id": session_id.hex()
+            }
+        ).json()
+        if r["status"] != 200:
+            raise ValueError(f"Could not get {type_} Keys, {r['message']} [{r['status']}]")
+        r = r["data"]
+
+        return [
+            Key(
+                type_=key["type"],
+                kid=Key.kid_to_uuid(bytes.fromhex(key["key_id"])),
+                key=bytes.fromhex(key["key"]),
+                permissions=key["permissions"]
+            )
+            for key in r["keys"]
+        ]
+
 
 __ALL__ = (RemoteCdm,)
