@@ -245,13 +245,10 @@ async def get_license_challenge(request: web.Request) -> web.Response:
     }, status=200)
 
 
-@routes.post("/{device}/parse_license/{key_type}")
+@routes.post("/{device}/parse_license")
 async def parse_license(request: web.Request) -> web.Response:
     secret_key = request.headers["X-Secret-Key"]
     device_name = request.match_info["device"]
-    key_type = request.match_info["key_type"]
-    if key_type == "ALL":
-        key_type = None
 
     body = await request.json()
     for required_field in ("session_id", "license_message"):
@@ -296,37 +293,9 @@ async def parse_license(request: web.Request) -> web.Response:
             "message": "Signature Validation failed on the License Message, rejecting."
         }, status=400)
 
-    # get keys
-    try:
-        keys = cdm.get_keys(session_id, key_type)
-    except InvalidSession:
-        return web.json_response({
-            "status": 400,
-            "message": f"Invalid Session ID '{session_id.hex()}', it may have expired."
-        }, status=400)
-    except ValueError as e:
-        return web.json_response({
-            "status": 400,
-            "message": f"The Key Type value '{key_type}' is invalid, {e}"
-        }, status=400)
-
-    # get the keys in json form
-    keys_json = [
-        {
-            "key_id": key.kid.hex,
-            "key": key.key.hex(),
-            "type": key.type,
-            "permissions": key.permissions,
-        }
-        for key in keys
-    ]
-
     return web.json_response({
         "status": 200,
-        "message": "Success",
-        "data": {
-            "keys": keys_json
-        }
+        "message": "Successfully parsed and loaded the Keys from the License message."
     })
 
 

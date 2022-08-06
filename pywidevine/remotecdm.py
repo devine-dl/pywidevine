@@ -228,7 +228,7 @@ class RemoteCdm(Cdm):
             )
 
         r = self.__session.post(
-            url=f"{self.host}/{self.device_name}/parse_license/ALL",
+            url=f"{self.host}/{self.device_name}/parse_license",
             json={
                 "session_id": session_id.hex(),
                 "license_message": base64.b64encode(license_message.SerializeToString()).decode()
@@ -236,17 +236,6 @@ class RemoteCdm(Cdm):
         )
         if r.status_code != 200:
             raise ValueError(f"Cannot parse License, {r.text} [{r.status_code}]")
-        r = r.json()["data"]
-
-        session.keys = [
-            Key(
-                type_=key["type"],
-                kid=Key.kid_to_uuid(bytes.fromhex(key["key_id"])),
-                key=bytes.fromhex(key["key"]),
-                permissions=key["permissions"]
-            )
-            for key in r["keys"]
-        ]
 
     def get_keys(self, session_id: bytes, type_: Optional[Union[int, str]] = None) -> list[Key]:
         try:
