@@ -296,7 +296,6 @@ async def parse_license(request: web.Request) -> web.Response:
         "status": 200,
         "message": "Success",
         "data": {
-            # TODO: Add derived context keys like enc/mac[client]/mac[server]
             "keys": license_keys
         }
     })
