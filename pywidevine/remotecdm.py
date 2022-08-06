@@ -7,7 +7,6 @@ from typing import Union, Optional
 
 import requests
 from Crypto.PublicKey import RSA
-from construct import Container
 from google.protobuf.message import DecodeError
 from pywidevine.cdm import Cdm
 from pywidevine.device import Device

@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Union, Container, Optional
+from typing import Union, Optional
 from uuid import UUID
 
 from Crypto.Cipher import AES, PKCS1_OAEP
