@@ -96,7 +96,7 @@ class PSSH:
         self.version = box.version
         self.flags = box.flags
         self.system_id = box.system_ID
-        self.key_ids = box.key_IDs
+        self.__key_ids = box.key_IDs
         self.init_data = box.init_data
 
     @classmethod
@@ -175,10 +175,12 @@ class PSSH:
             init_data=[init_data, b""][init_data is None]
         )))
 
-        if key_ids and version == 0:
-            PSSH.overwrite_key_ids(box, [UUID(bytes=x) for x in key_ids])
+        pssh = cls(box)
 
-        return cls(box)
+        if key_ids and version == 0:
+            pssh.set_key_ids([UUID(bytes=x) for x in key_ids])
+
+        return pssh
 
     @classmethod
     def from_playready_pssh(cls, box: Container) -> PSSH:
@@ -272,25 +274,30 @@ class PSSH:
 
         raise ValueError(f"Unsupported Box {box!r}")
 
-    @staticmethod
-    def overwrite_key_ids(box: Container, key_ids: list[UUID]) -> Container:
-        """Overwrite all Key IDs in PSSH box with the specified Key IDs."""
-        if box.system_ID != PSSH.SystemId.Widevine:
-            raise ValueError(f"Only Widevine PSSH Boxes are supported, not {box.system_ID}.")
+    def set_key_ids(self, key_ids: list[UUID]) -> None:
+        """Overwrite all Key IDs with the specified Key IDs."""
+        if self.system_id != PSSH.SystemId.Widevine:
+            # TODO: Add support for setting the Key IDs in a PlayReady Header
+            raise ValueError(f"Only Widevine PSSH Boxes are supported, not {self.system_id}.")
 
-        if box.version == 1 or box.key_IDs:
-            # only use key_IDs if version is 1, or it's already being used
+        if not isinstance(key_ids, list):
+            raise TypeError(f"Expecting key_ids to be a list, not {key_ids!r}")
+
+        if not all(isinstance(x, UUID) for x in key_ids):
+            not_uuid = [x for x in key_ids if not isinstance(x, UUID)]
+            raise TypeError(f"All Key IDs in key_ids must be a {UUID}, not {not_uuid}")
+
+        if self.version == 1 or self.__key_ids:
+            # only use v1 box key_ids if version is 1, or it's already being used
             # this is in case the service stupidly expects it for version 0
-            box.key_IDs = key_ids
+            self.__key_ids = key_ids
 
-        init = WidevinePsshData()
-        init.ParseFromString(box.init_data)
+        cenc_header = WidevinePsshData()
+        cenc_header.ParseFromString(self.init_data)
 
-        init.key_ids[:] = [
+        cenc_header.key_ids[:] = [
             key_id.bytes
             for key_id in key_ids
         ]
 
-        box.init_data = init.SerializeToString()
-
-        return box
+        self.init_data = cenc_header.SerializeToString()
