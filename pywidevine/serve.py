@@ -106,10 +106,10 @@ async def close(request: web.Request) -> web.Response:
 
     try:
         cdm.close(session_id)
-    except InvalidSession as e:
+    except InvalidSession:
         return web.json_response({
             "status": 400,
-            "message": str(e)
+            "message": f"Invalid Session ID '{session_id.hex()}', it may have expired."
         }, status=400)
 
     return web.json_response({
@@ -146,20 +146,15 @@ async def set_service_certificate(request: web.Request) -> web.Response:
             "message": f"No Cdm session for {device_name} has been opened yet. No session to use."
         }, status=400)
 
-    if session_id not in cdm._sessions:
-        # This can happen if:
-        # - API server gets shutdown/restarted,
-        # - The user calls /challenge before /open,
-        # - The user called /open on a different IP Address
-        # - The user closed the session
-        return web.json_response({
-            "status": 400,
-            "message": "Invalid Session ID. Session ID may have Expired."
-        }, status=400)
-
     # set service certificate
     certificate = body.get("certificate")
-    provider_id = cdm.set_service_certificate(session_id, certificate)
+    try:
+        provider_id = cdm.set_service_certificate(session_id, certificate)
+    except InvalidSession:
+        return web.json_response({
+            "status": 400,
+            "message": f"Invalid Session ID '{session_id.hex()}', it may have expired."
+        }, status=400)
 
     return web.json_response({
         "status": 200,
@@ -194,17 +189,6 @@ async def get_license_challenge(request: web.Request) -> web.Response:
             "message": f"No Cdm session for {device_name} has been opened yet. No session to use."
         }, status=400)
 
-    if session_id not in cdm._sessions:
-        # This can happen if:
-        # - API server gets shutdown/restarted,
-        # - The user calls /challenge before /open,
-        # - The user called /open on a different IP Address
-        # - The user closed the session
-        return web.json_response({
-            "status": 400,
-            "message": "Invalid Session ID. Session ID may have Expired."
-        }, status=400)
-
     # enforce service certificate (opt-in)
     if request.app["config"].get("force_privacy_mode") and not cdm._sessions[session_id].service_certificate:
         return web.json_response({
@@ -216,12 +200,18 @@ async def get_license_challenge(request: web.Request) -> web.Response:
     init_data = PSSH(body["init_data"])
 
     # get challenge
-    license_request = cdm.get_license_challenge(
-        session_id=session_id,
-        pssh=init_data,
-        type_=LicenseType.Value(request.match_info["license_type"]),
-        privacy_mode=True
-    )
+    try:
+        license_request = cdm.get_license_challenge(
+            session_id=session_id,
+            pssh=init_data,
+            type_=LicenseType.Value(request.match_info["license_type"]),
+            privacy_mode=True
+        )
+    except InvalidSession:
+        return web.json_response({
+            "status": 400,
+            "message": f"Invalid Session ID '{session_id.hex()}', it may have expired."
+        }, status=400)
 
     return web.json_response({
         "status": 200,
@@ -272,19 +262,14 @@ async def parse_license(request: web.Request) -> web.Response:
             "message": f"No Cdm session for {device_name} has been opened yet. No session to use."
         }, status=400)
 
-    if session_id not in cdm._sessions:
-        # This can happen if:
-        # - API server gets shutdown/restarted,
-        # - The user calls /challenge before /open,
-        # - The user called /open on a different IP Address
-        # - The user closed the session
+    # parse the license message
+    try:
+        cdm.parse_license(session_id, body["license_message"])
+    except InvalidSession:
         return web.json_response({
             "status": 400,
-            "message": "Invalid Session ID. Session ID may have Expired."
+            "message": f"Invalid Session ID '{session_id.hex()}', it may have expired."
         }, status=400)
-
-    # parse the license message
-    cdm.parse_license(session_id, body["license_message"])
 
     # prepare the keys
     license_keys = [
@@ -336,20 +321,14 @@ async def get_keys(request: web.Request) -> web.Response:
             "message": f"No Cdm session for {device_name} has been opened yet. No session to use."
         }, status=400)
 
-    if session_id not in cdm._sessions:
-        # This can happen if:
-        # - API server gets shutdown/restarted,
-        # - The user calls /challenge before /open,
-        # - The user called /open on a different IP Address
-        # - The user closed the session
-        return web.json_response({
-            "status": 400,
-            "message": "Invalid Session ID. Session ID may have Expired."
-        }, status=400)
-
     # get keys
     try:
         keys = cdm.get_keys(session_id, key_type)
+    except InvalidSession:
+        return web.json_response({
+            "status": 400,
+            "message": f"Invalid Session ID '{session_id.hex()}', it may have expired."
+        }, status=400)
     except ValueError as e:
         return web.json_response({
             "status": 400,
