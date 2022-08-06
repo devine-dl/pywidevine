@@ -21,7 +21,7 @@ from pywidevine import __version__
 from pywidevine.cdm import Cdm
 from pywidevine.device import Device
 from pywidevine.exceptions import TooManySessions, InvalidSession, SignatureMismatch
-from pywidevine.license_protocol_pb2 import LicenseType, License
+from pywidevine.license_protocol_pb2 import License
 
 routes = web.RouteTableDef()
 
@@ -181,6 +181,7 @@ async def set_service_certificate(request: web.Request) -> web.Response:
 async def get_license_challenge(request: web.Request) -> web.Response:
     secret_key = request.headers["X-Secret-Key"]
     device_name = request.match_info["device"]
+    license_type = request.match_info["license_type"]
 
     body = await request.json()
     for required_field in ("session_id", "init_data"):
@@ -216,7 +217,7 @@ async def get_license_challenge(request: web.Request) -> web.Response:
         license_request = cdm.get_license_challenge(
             session_id=session_id,
             pssh=init_data,
-            type_=LicenseType.Value(request.match_info["license_type"]),
+            type_=license_type,
             privacy_mode=True
         )
     except InvalidSession:
