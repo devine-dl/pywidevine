@@ -67,7 +67,7 @@ async def open(request: web.Request) -> web.Response:
             "message": f"Device '{device_name}' is not found or you are not authorized to use it."
         }, status=403)
 
-    cdm = request.app["cdms"].get((secret_key, device_name))
+    cdm: Optional[Cdm] = request.app["cdms"].get((secret_key, device_name))
     if not cdm:
         device = Device.load(request.app["config"]["devices"][device_name])
         cdm = request.app["cdms"][(secret_key, device_name)] = Cdm.from_device(device)
@@ -99,7 +99,7 @@ async def close(request: web.Request) -> web.Response:
     device_name = request.match_info["device"]
     session_id = bytes.fromhex(request.match_info["session_id"])
 
-    cdm = request.app["cdms"].get((secret_key, device_name))
+    cdm: Optional[Cdm] = request.app["cdms"].get((secret_key, device_name))
     if not cdm:
         return web.json_response({
             "status": 400,
@@ -141,7 +141,7 @@ async def set_service_certificate(request: web.Request) -> web.Response:
     session_id = bytes.fromhex(body["session_id"])
 
     # get cdm
-    cdm = request.app["cdms"].get((secret_key, device_name))
+    cdm: Optional[Cdm] = request.app["cdms"].get((secret_key, device_name))
     if not cdm:
         return web.json_response({
             "status": 400,
@@ -195,7 +195,7 @@ async def get_license_challenge(request: web.Request) -> web.Response:
     session_id = bytes.fromhex(body["session_id"])
 
     # get cdm
-    cdm = request.app["cdms"].get((secret_key, device_name))
+    cdm: Optional[Cdm] = request.app["cdms"].get((secret_key, device_name))
     if not cdm:
         return web.json_response({
             "status": 400,
@@ -265,7 +265,7 @@ async def parse_license(request: web.Request) -> web.Response:
     session_id = bytes.fromhex(body["session_id"])
 
     # get cdm
-    cdm = request.app["cdms"].get((secret_key, device_name))
+    cdm: Optional[Cdm] = request.app["cdms"].get((secret_key, device_name))
     if not cdm:
         return web.json_response({
             "status": 400,
