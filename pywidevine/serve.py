@@ -308,6 +308,76 @@ async def parse_license(request: web.Request) -> web.Response:
     })
 
 
+@routes.post("/{device}/get_keys/{key_type}")
+async def get_keys(request: web.Request) -> web.Response:
+    secret_key = request.headers["X-Secret-Key"]
+    device_name = request.match_info["device"]
+
+    body = await request.json()
+    for required_field in ("session_id",):
+        if not body.get(required_field):
+            return web.json_response({
+                "status": 400,
+                "message": f"Missing required field '{required_field}' in JSON body."
+            }, status=400)
+
+    # get session id
+    session_id = bytes.fromhex(body["session_id"])
+
+    # get key type
+    key_type = request.match_info["key_type"]
+    if key_type == "ALL":
+        key_type = None
+
+    # get cdm
+    cdm = request.app["cdms"].get((secret_key, device_name))
+    if not cdm:
+        return web.json_response({
+            "status": 400,
+            "message": f"No Cdm session for {device_name} has been opened yet. No session to use."
+        }, status=400)
+
+    if session_id not in cdm._sessions:
+        # This can happen if:
+        # - API server gets shutdown/restarted,
+        # - The user calls /challenge before /open,
+        # - The user called /open on a different IP Address
+        # - The user closed the session
+        return web.json_response({
+            "status": 400,
+            "message": "Invalid Session ID. Session ID may have Expired."
+        }, status=400)
+
+    # get keys
+    try:
+        keys = cdm.get_keys(session_id, key_type)
+    except ValueError as e:
+        return web.json_response({
+            "status": 400,
+            "message": f"The Key Type value '{key_type}' is invalid, {e}"
+        }, status=400)
+
+    # get the keys in json form
+    keys_json = [
+        {
+            "key_id": key.kid.hex,
+            "key": key.key.hex(),
+            "type": key.type,
+            "permissions": key.permissions,
+        }
+        for key in keys
+        if not key_type or key.type == key_type
+    ]
+
+    return web.json_response({
+        "status": 200,
+        "message": "Success",
+        "data": {
+            "keys": keys_json
+        }
+    })
+
+
 @web.middleware
 async def authentication(request: web.Request, handler) -> web.Response:
     response = None
