@@ -21,7 +21,7 @@ from pywidevine import __version__
 from pywidevine.cdm import Cdm
 from pywidevine.device import Device
 from pywidevine.exceptions import TooManySessions, InvalidSession, SignatureMismatch, InvalidInitData, \
-    InvalidLicenseType
+    InvalidLicenseType, InvalidLicenseMessage, InvalidContext
 
 routes = web.RouteTableDef()
 
@@ -280,23 +280,52 @@ async def parse_license(request: web.Request) -> web.Response:
             "status": 400,
             "message": f"Invalid Session ID '{session_id.hex()}', it may have expired."
         }, status=400)
+    except InvalidLicenseMessage as e:
+        return web.json_response({
+            "status": 400,
+            "message": f"Invalid License Message, {e}"
+        }, status=400)
+    except InvalidContext as e:
+        return web.json_response({
+            "status": 400,
+            "message": f"Invalid Context, {e}"
+        }, status=400)
+    except SignatureMismatch:
+        return web.json_response({
+            "status": 400,
+            "message": "Signature Validation failed on the License Message, rejecting."
+        }, status=400)
 
-    # prepare the keys
-    license_keys = [
+    # get keys
+    try:
+        keys = cdm.get_keys(session_id, key_type)
+    except InvalidSession:
+        return web.json_response({
+            "status": 400,
+            "message": f"Invalid Session ID '{session_id.hex()}', it may have expired."
+        }, status=400)
+    except ValueError as e:
+        return web.json_response({
+            "status": 400,
+            "message": f"The Key Type value '{key_type}' is invalid, {e}"
+        }, status=400)
+
+    # get the keys in json form
+    keys_json = [
         {
             "key_id": key.kid.hex,
             "key": key.key.hex(),
             "type": key.type,
             "permissions": key.permissions,
         }
-        for key in cdm.get_keys(session_id, key_type)
+        for key in keys
     ]
 
     return web.json_response({
         "status": 200,
         "message": "Success",
         "data": {
-            "keys": license_keys
+            "keys": keys_json
         }
     })
 
