@@ -20,7 +20,8 @@ except ImportError:
 from pywidevine import __version__
 from pywidevine.cdm import Cdm
 from pywidevine.device import Device
-from pywidevine.exceptions import TooManySessions, InvalidSession, SignatureMismatch
+from pywidevine.exceptions import TooManySessions, InvalidSession, SignatureMismatch, InvalidInitData, \
+    InvalidLicenseType
 from pywidevine.license_protocol_pb2 import License
 
 routes = web.RouteTableDef()
@@ -224,6 +225,16 @@ async def get_license_challenge(request: web.Request) -> web.Response:
         return web.json_response({
             "status": 400,
             "message": f"Invalid Session ID '{session_id.hex()}', it may have expired."
+        }, status=400)
+    except InvalidInitData as e:
+        return web.json_response({
+            "status": 400,
+            "message": f"Invalid Init Data, {e}"
+        }, status=400)
+    except InvalidLicenseType:
+        return web.json_response({
+            "status": 400,
+            "message": f"Invalid License Type '{license_type}'"
         }, status=400)
 
     return web.json_response({
