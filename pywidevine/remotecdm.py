@@ -94,10 +94,12 @@ class RemoteCdm(Cdm):
         raise NotImplementedError("You cannot load a RemoteCdm from a local Device file.")
 
     def open(self) -> bytes:
-        r = self.__session.get(f"{self.host}/{self.device_name}/open")
-        if r.status_code != 200:
-            raise ValueError(f"Cannot Open CDM Session, {r.text} [{r.status_code}]")
-        r = r.json()["data"]
+        r = self.__session.get(
+            url=f"{self.host}/{self.device_name}/open"
+        ).json()
+        if r['status'] != 200:
+            raise ValueError(f"Cannot Open CDM Session, {r['message']} [{r['status']}]")
+        r = r["data"]
 
         if int(r["device"]["system_id"]) != self.system_id:
             raise DeviceMismatch("The System ID specified does not match the one specified in the API response.")
@@ -108,9 +110,11 @@ class RemoteCdm(Cdm):
         return bytes.fromhex(r["session_id"])
 
     def close(self, session_id: bytes) -> None:
-        r = self.__session.get(f"{self.host}/{self.device_name}/close/{session_id.hex()}")
-        if r.status_code != 200:
-            raise ValueError(f"Cannot Close CDM Session, {r.text} [{r.status_code}]")
+        r = self.__session.get(
+            url=f"{self.host}/{self.device_name}/close/{session_id.hex()}"
+        ).json()
+        if r["status"] != 200:
+            raise ValueError(f"Cannot Close CDM Session, {r['message']} [{r['status']}]")
 
     def set_service_certificate(self, session_id: bytes, certificate: Optional[Union[bytes, str]]) -> str:
         if certificate is None:
@@ -128,10 +132,10 @@ class RemoteCdm(Cdm):
                 "session_id": session_id.hex(),
                 "certificate": certificate_b64
             }
-        )
-        if r.status_code != 200:
-            raise ValueError(f"Cannot Set CDMs Service Certificate, {r.text} [{r.status_code}]")
-        r = r.json()["data"]
+        ).json()
+        if r["status"] != 200:
+            raise ValueError(f"Cannot Set CDMs Service Certificate, {r['message']} [{r['status']}]")
+        r = r["data"]
 
         return r["provider_id"]
 
@@ -165,10 +169,10 @@ class RemoteCdm(Cdm):
                 "session_id": session_id.hex(),
                 "init_data": pssh.dumps()
             }
-        )
-        if r.status_code != 200:
-            raise ValueError(f"Cannot get Challenge, {r.text} [{r.status_code}]")
-        r = r.json()["data"]
+        ).json()
+        if r["status"] != 200:
+            raise ValueError(f"Cannot get Challenge, {r['message']} [{r['status']}]")
+        r = r["data"]
 
         try:
             license_message = SignedMessage()
@@ -211,9 +215,9 @@ class RemoteCdm(Cdm):
                 "session_id": session_id.hex(),
                 "license_message": base64.b64encode(license_message.SerializeToString()).decode()
             }
-        )
-        if r.status_code != 200:
-            raise ValueError(f"Cannot parse License, {r.text} [{r.status_code}]")
+        ).json()
+        if r["status"] != 200:
+            raise ValueError(f"Cannot parse License, {r['message']} [{r['status']}]")
 
     def get_keys(self, session_id: bytes, type_: Optional[Union[int, str]] = None) -> list[Key]:
         try:
