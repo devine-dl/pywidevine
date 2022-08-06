@@ -3,6 +3,8 @@ import sys
 from pathlib import Path
 from typing import Optional, Union
 
+from google.protobuf.message import DecodeError
+
 from pywidevine.pssh import PSSH
 
 try:
@@ -18,7 +20,7 @@ except ImportError:
 from pywidevine import __version__
 from pywidevine.cdm import Cdm
 from pywidevine.device import Device
-from pywidevine.exceptions import TooManySessions, InvalidSession
+from pywidevine.exceptions import TooManySessions, InvalidSession, SignatureMismatch
 from pywidevine.license_protocol_pb2 import LicenseType, License
 
 routes = web.RouteTableDef()
@@ -154,6 +156,16 @@ async def set_service_certificate(request: web.Request) -> web.Response:
         return web.json_response({
             "status": 400,
             "message": f"Invalid Session ID '{session_id.hex()}', it may have expired."
+        }, status=400)
+    except DecodeError as e:
+        return web.json_response({
+            "status": 400,
+            "message": f"Invalid Service Certificate, {e}"
+        }, status=400)
+    except SignatureMismatch:
+        return web.json_response({
+            "status": 400,
+            "message": "Signature Validation failed on the Service Certificate, rejecting."
         }, status=400)
 
     return web.json_response({
