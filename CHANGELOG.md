@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2022-08-06
+
+This release is a face-lift for the PSSH class with a moderate amount of Cdm and Serve interface changes.  
+You will likely need to make a moderate amount of changes in your client code, please study the changelog.
+
+Please note that while it was always privatized as `_sessions`, accessing the Session directly for any purpose was
+never recommended or supported. With v1.4.0, there will be drastic problems if you continue to do so. One of the
+few reasons to do that was to get the license keys which is no longer required with CDMs new `get_keys()` method.
+
+RemoteCdm minimum supported Serve API version is now v1.4.0.
+
+### Added
+
+- The PSSH class now has a `new()` method to craft a new PSSH box. The box can be crafted from arbitrary init_data
+  and/or key_ids. If only key_ids is supplied a new Widevine Cenc Header will be created and the key IDs will be put
+  into it. This allows you to make compliant v0 or v1 boxes with as little data as just a Key ID.
+- The PSSH class now has `dump()` and `dumps()` methods to serialize the data as binary or base64 respectively. It will
+  be serialized as a pymp4 PSSH box, ready to be used in an MP4 file.
+- Cdm now has a method `get_keys()` to get the keys of the loaded license. This is the alternative to manually
+  accessing the keys by navigating the `_sessions` class instance variable.
+- Serve API now also has a `/get_keys` endpoint to call the `get_keys()` method of the underlying Cdm session.
+
+### Changed
+
+- Cdm and RemoteCdm now expect a PSSH object as the `init_data` param for `get_license_challenge`. You can no longer
+  provide it anything else, that includes base64 or bytes form. It must be a PSSH object.
+- Serve no longer returns license keys in the response of the `/keys` endpoint.
+- Serve has changed the endpoint `/challenge` to `/get_license_challenge` and `/keys` to `/parse_license`. This is to
+  be consistent with the method names of the underlying Cdm class.
+- The PSSH class has been reworked from being a static helper class to a proper PSSH class.
+- PSSH.from_playready_pssh is now a class method and returns as a PSSH object.
+
+### Removed
+
+- PSSH.get_as_box has been removed and merged into the PSSH constructor.
+- PSSH.from_key_ids has been removed entirely, you should now use `PSSH.new(key_ids=...)` instead.
+- All uses of a local Session() object has been removed from RemoteCdm. The session is now fully controlled by the
+  remote API and de-synchronization by external alteration or unexpected exceptions is no longer a possibility.
+
+### Fixed
+
+- Various uses of the `key_ids` field of WidevinePsshData proto has been fixed in the PSSH class.
+- Fixed a few Serve API crashes in edge cases with improved error handling on Cdm method calls.
+
 ## [1.3.1] - 2022-08-04
 
 ### Added
