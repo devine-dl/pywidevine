@@ -170,8 +170,8 @@ async def set_service_certificate(request: web.Request) -> web.Response:
     })
 
 
-@routes.post("/{device}/challenge/{license_type}")
-async def challenge(request: web.Request) -> web.Response:
+@routes.post("/{device}/get_license_challenge/{license_type}")
+async def get_license_challenge(request: web.Request) -> web.Response:
     secret_key = request.headers["X-Secret-Key"]
     device_name = request.match_info["device"]
 
@@ -232,8 +232,8 @@ async def challenge(request: web.Request) -> web.Response:
     }, status=200)
 
 
-@routes.post("/{device}/keys/{key_type}")
-async def keys(request: web.Request) -> web.Response:
+@routes.post("/{device}/parse_license/{key_type}")
+async def parse_license(request: web.Request) -> web.Response:
     secret_key = request.headers["X-Secret-Key"]
     device_name = request.match_info["device"]
 

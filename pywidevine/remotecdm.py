@@ -178,7 +178,7 @@ class RemoteCdm(Cdm):
             raise InvalidLicenseType(f"License Type {type_!r} is invalid")
 
         r = self.__session.post(
-            url=f"{self.host}/{self.device_name}/challenge/{type_}",
+            url=f"{self.host}/{self.device_name}/get_license_challenge/{type_}",
             json={
                 "session_id": session_id.hex(),
                 "init_data": pssh.dumps()
@@ -231,7 +231,7 @@ class RemoteCdm(Cdm):
         licence.ParseFromString(license_message.msg)
 
         r = self.__session.post(
-            url=f"{self.host}/{self.device_name}/keys/ALL",
+            url=f"{self.host}/{self.device_name}/parse_license/ALL",
             json={
                 "session_id": session_id.hex(),
                 "license_message": base64.b64encode(license_message.SerializeToString()).decode()
