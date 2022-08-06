@@ -390,6 +390,39 @@ class Cdm:
 
         del session.context[licence.id.request_id]
 
+    def get_keys(self, session_id: bytes, type_: Optional[Union[int, str]] = None) -> list[Key]:
+        """
+        Get Keys from the loaded License message.
+
+        Parameters:
+            session_id: Session identifier.
+            type_: (optional) Key Type to filter by and return.
+
+        Raises:
+            InvalidSession: If the Session identifier is invalid.
+            TypeError: If the provided type_ is an unexpected value type.
+            ValueError: If the provided type_ is not a valid Key Type.
+        """
+        session = self._sessions.get(session_id)
+        if not session:
+            raise InvalidSession(f"Session identifier {session_id!r} is invalid.")
+
+        try:
+            if isinstance(type_, str):
+                type_ = License.KeyContainer.KeyType.Value(type_)
+            elif isinstance(type_, int):
+                License.KeyContainer.KeyType.Name(type_)  # only test
+            elif type_ is not None:
+                raise TypeError(f"Expected type_ to be a {License.KeyContainer.KeyType} or int, not {type_!r}")
+        except ValueError as e:
+            raise ValueError(f"Could not parse type_ as a {License.KeyContainer.KeyType}, {e}")
+
+        return [
+            key
+            for key in session.keys
+            if not type_ or key.type == License.KeyContainer.KeyType.Name(type_)
+        ]
+
     def decrypt(
         self,
         session_id: bytes,
