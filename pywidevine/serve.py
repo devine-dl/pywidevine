@@ -22,7 +22,6 @@ from pywidevine.cdm import Cdm
 from pywidevine.device import Device
 from pywidevine.exceptions import TooManySessions, InvalidSession, SignatureMismatch, InvalidInitData, \
     InvalidLicenseType
-from pywidevine.license_protocol_pb2 import License
 
 routes = web.RouteTableDef()
 
@@ -250,6 +249,9 @@ async def get_license_challenge(request: web.Request) -> web.Response:
 async def parse_license(request: web.Request) -> web.Response:
     secret_key = request.headers["X-Secret-Key"]
     device_name = request.match_info["device"]
+    key_type = request.match_info["key_type"]
+    if key_type == "ALL":
+        key_type = None
 
     body = await request.json()
     for required_field in ("session_id", "license_message"):
@@ -261,22 +263,6 @@ async def parse_license(request: web.Request) -> web.Response:
 
     # get session id
     session_id = bytes.fromhex(body["session_id"])
-
-    # get key type
-    key_type = request.match_info["key_type"]
-    if key_type == "ALL":
-        key_type = None
-    else:
-        try:
-            if key_type.isdigit():
-                key_type = License.KeyContainer.KeyType.Name(int(key_type))
-            else:
-                License.KeyContainer.KeyType.Value(key_type)  # only test
-        except ValueError as e:
-            return web.json_response({
-                "status": 400,
-                "message": f"The Key Type value is invalid, {e}"
-            }, status=400)
 
     # get cdm
     cdm = request.app["cdms"].get((secret_key, device_name))
