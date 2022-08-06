@@ -227,9 +227,6 @@ class RemoteCdm(Cdm):
                 f"'{SignedMessage.MessageType.Name(license_message.type)}' message."
             )
 
-        licence = License()
-        licence.ParseFromString(license_message.msg)
-
         r = self.__session.post(
             url=f"{self.host}/{self.device_name}/parse_license/ALL",
             json={
