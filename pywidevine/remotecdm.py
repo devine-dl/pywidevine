@@ -86,7 +86,7 @@ class RemoteCdm(Cdm):
         if not server_version:
             raise ValueError(f"The pywidevine server API is not stating the version correctly, cannot continue.")
         server_version = server_version.group(1)
-        if server_version < "1.3.0":
+        if server_version < "1.4.0":
             raise ValueError(f"This pywidevine serve API version ({server_version}) is not supported.")
 
     @classmethod
