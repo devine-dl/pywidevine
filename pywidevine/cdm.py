@@ -108,7 +108,7 @@ class Cdm:
         self.__signer = pss.new(rsa_key)
         self.__decrypter = PKCS1_OAEP.new(rsa_key)
 
-        self._sessions: dict[bytes, Session] = {}
+        self.__sessions: dict[bytes, Session] = {}
 
     @classmethod
     def from_device(cls, device: Device) -> Cdm:
@@ -128,11 +128,11 @@ class Cdm:
         Raises:
             TooManySessions: If the session cannot be opened as limit has been reached.
         """
-        if len(self._sessions) > self.MAX_NUM_OF_SESSIONS:
+        if len(self.__sessions) > self.MAX_NUM_OF_SESSIONS:
             raise TooManySessions(f"Too many Sessions open ({self.MAX_NUM_OF_SESSIONS}).")
 
         session = Session()
-        self._sessions[session.id] = session
+        self.__sessions[session.id] = session
 
         return session.id
 
@@ -146,10 +146,10 @@ class Cdm:
         Raises:
             InvalidSession: If the Session identifier is invalid.
         """
-        session = self._sessions.get(session_id)
+        session = self.__sessions.get(session_id)
         if not session:
             raise InvalidSession(f"Session identifier {session_id!r} is invalid.")
-        del self._sessions[session_id]
+        del self.__sessions[session_id]
 
     def set_service_certificate(self, session_id: bytes, certificate: Optional[Union[bytes, str]]) -> str:
         """
@@ -180,7 +180,7 @@ class Cdm:
         Returns the Service Provider ID of the verified DrmCertificate if successful.
         If certificate is None, it will return the now unset certificate's Provider ID.
         """
-        session = self._sessions.get(session_id)
+        session = self.__sessions.get(session_id)
         if not session:
             raise InvalidSession(f"Session identifier {session_id!r} is invalid.")
 
@@ -260,7 +260,7 @@ class Cdm:
         Returns a SignedMessage containing a LicenseRequest message. It's signed with
         the Private Key of the device provision.
         """
-        session = self._sessions.get(session_id)
+        session = self.__sessions.get(session_id)
         if not session:
             raise InvalidSession(f"Session identifier {session_id!r} is invalid.")
 
@@ -333,7 +333,7 @@ class Cdm:
             SignatureMismatch: If the Signature of the License SignedMessage does not
                 match the underlying License.
         """
-        session = self._sessions.get(session_id)
+        session = self.__sessions.get(session_id)
         if not session:
             raise InvalidSession(f"Session identifier {session_id!r} is invalid.")
 
@@ -403,7 +403,7 @@ class Cdm:
             TypeError: If the provided type_ is an unexpected value type.
             ValueError: If the provided type_ is not a valid Key Type.
         """
-        session = self._sessions.get(session_id)
+        session = self.__sessions.get(session_id)
         if not session:
             raise InvalidSession(f"Session identifier {session_id!r} is invalid.")
 
@@ -475,7 +475,7 @@ class Cdm:
         if output_file.is_file() and not exists_ok:
             raise FileExistsError(f"Output file already exists, {output_file}")
 
-        session = self._sessions.get(session_id)
+        session = self.__sessions.get(session_id)
         if not session:
             raise InvalidSession(f"Session identifier {session_id!r} is invalid.")
 
