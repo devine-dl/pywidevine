@@ -226,40 +226,6 @@ class PSSH:
 
         raise ValueError(f"This PSSH is not supported by key_ids() property, {self.dumps()}")
 
-    @classmethod
-    def from_playready_pssh(cls, box: Container) -> PSSH:
-        """
-        Convert a PlayReady PSSH Box to a Widevine PSSH Box.
-
-        Note: The resulting Widevine PSSH will likely not be usable for Licensing. This
-        is because there is some data for a Widevine Cenc Header that is missing from a
-        PlayReady PSSH Box.
-
-        This converted PSSH will only be useful for it's Key IDs, so realistically only
-        for matching Key IDs with a Track. As a fallback.
-        """
-        if box.type != b"pssh":
-            raise ValueError(f"Box must be a PSSH box, not {box.type}")
-        if box.system_ID != PSSH.SystemId.PlayReady:
-            raise ValueError(f"This is not a PlayReady PSSH Box, {box.system_ID}")
-
-        key_ids = PSSH.get_key_ids(box)
-
-        cenc_header = WidevinePsshData()
-        cenc_header.algorithm = 1  # 0=Clear, 1=AES-CTR
-
-        for key_id in key_ids:
-            cenc_header.key_ids.append(key_id.bytes)
-        if box.version == 1:
-            # ensure both cenc header and box has same Key IDs
-            # v1 uses both this and within init data for basically no reason
-            box.key_IDs = key_ids
-
-        box.init_data = cenc_header.SerializeToString()
-        box.system_ID = PSSH.SystemId.Widevine
-
-        return cls(box)
-
     def dump(self) -> bytes:
         """Export the PSSH object as a full PSSH box in bytes form."""
         return Box.build(dict(
@@ -274,6 +240,29 @@ class PSSH:
     def dumps(self) -> str:
         """Export the PSSH object as a full PSSH box in base64 form."""
         return base64.b64encode(self.dump()).decode()
+
+    def playready_to_widevine(self) -> None:
+        """
+        Convert PlayReady PSSH data to Widevine PSSH data.
+
+        There's only a limited amount of information within a PlayReady PSSH header that
+        can be used in a Widevine PSSH Header. The converted data may or may not result
+        in an accepted PSSH. It depends on what the License Server is expecting.
+        """
+        if self.system_id != PSSH.SystemId.PlayReady:
+            raise ValueError(f"This is not a PlayReady PSSH, {self.system_id}")
+
+        cenc_header = WidevinePsshData()
+        cenc_header.algorithm = 1  # 0=Clear, 1=AES-CTR
+        cenc_header.key_ids[:] = [x.bytes for x in self.key_ids]
+
+        if self.version == 1:
+            # ensure both cenc header and box has same Key IDs
+            # v1 uses both this and within init data for basically no reason
+            self.__key_ids = self.key_ids
+
+        self.init_data = cenc_header.SerializeToString()
+        self.system_id = PSSH.SystemId.Widevine
 
     def set_key_ids(self, key_ids: list[UUID]) -> None:
         """Overwrite all Key IDs with the specified Key IDs."""
