@@ -182,6 +182,50 @@ class PSSH:
 
         return pssh
 
+    @property
+    def key_ids(self) -> list[UUID]:
+        """
+        Get all Key IDs from within the Box or Init Data, wherever possible.
+
+        Supports:
+        - Version 1 Boxes
+        - Widevine Headers
+        - PlayReady Headers (4.0.0.0->4.3.0.0)
+        """
+        if self.version == 1 and self.__key_ids:
+            return self.__key_ids
+
+        if self.system_id == PSSH.SystemId.Widevine:
+            # TODO: What if its not a Widevine Cenc Header but the System ID is set as Widevine?
+            cenc_header = WidevinePsshData()
+            cenc_header.ParseFromString(self.init_data)
+            return [
+                # the key_ids value may or may not be hex underlying
+                UUID(bytes=key_id) if len(key_id) == 16 else UUID(hex=key_id.decode())
+                for key_id in cenc_header.key_ids
+            ]
+
+        if self.system_id == PSSH.SystemId.PlayReady:
+            xml_string = self.init_data.decode("utf-16-le")
+            # some of these init data has garbage(?) in front of it
+            xml_string = xml_string[xml_string.index("<"):]
+            xml = etree.fromstring(xml_string)
+            header_version = xml.attrib["version"]
+            if header_version == "4.0.0.0":
+                key_ids = xml.xpath("DATA/KID/text()")
+            elif header_version == "4.1.0.0":
+                key_ids = xml.xpath("DATA/PROTECTINFO/KID/@VALUE")
+            elif header_version in ("4.2.0.0", "4.3.0.0"):
+                key_ids = xml.xpath("DATA/PROTECTINFO/KIDS/KID/@VALUE")
+            else:
+                raise ValueError(f"Unsupported PlayReady header version {header_version}")
+            return [
+                UUID(bytes=base64.b64decode(key_id))
+                for key_id in key_ids
+            ]
+
+        raise ValueError(f"This PSSH is not supported by key_ids() property, {self.dumps()}")
+
     @classmethod
     def from_playready_pssh(cls, box: Container) -> PSSH:
         """
@@ -230,49 +274,6 @@ class PSSH:
     def dumps(self) -> str:
         """Export the PSSH object as a full PSSH box in base64 form."""
         return base64.b64encode(self.dump()).decode()
-
-    @staticmethod
-    def get_key_ids(box: Container) -> list[UUID]:
-        """
-        Get Key IDs from a PSSH Box from within the Box or Init Data where possible.
-
-        Supports:
-        - Version 1 Boxes
-        - Widevine Headers
-        - PlayReady Headers (4.0.0.0->4.3.0.0)
-        """
-        if box.version == 1 and box.key_IDs:
-            return box.key_IDs
-
-        if box.system_ID == PSSH.SystemId.Widevine:
-            init = WidevinePsshData()
-            init.ParseFromString(box.init_data)
-            return [
-                # the key_ids value may or may not be hex underlying
-                UUID(bytes=key_id) if len(key_id) == 16 else UUID(hex=key_id.decode())
-                for key_id in init.key_ids
-            ]
-
-        if box.system_ID == PSSH.SystemId.PlayReady:
-            xml_string = box.init_data.decode("utf-16-le")
-            # some of these init data has garbage(?) in front of it
-            xml_string = xml_string[xml_string.index("<"):]
-            xml = etree.fromstring(xml_string)
-            header_version = xml.attrib["version"]
-            if header_version == "4.0.0.0":
-                key_ids = xml.xpath("DATA/KID/text()")
-            elif header_version == "4.1.0.0":
-                key_ids = xml.xpath("DATA/PROTECTINFO/KID/@VALUE")
-            elif header_version in ("4.2.0.0", "4.3.0.0"):
-                key_ids = xml.xpath("DATA/PROTECTINFO/KIDS/KID/@VALUE")
-            else:
-                raise ValueError(f"Unsupported PlayReady header version {header_version}")
-            return [
-                UUID(bytes=base64.b64decode(key_id))
-                for key_id in key_ids
-            ]
-
-        raise ValueError(f"Unsupported Box {box!r}")
 
     def set_key_ids(self, key_ids: list[UUID]) -> None:
         """Overwrite all Key IDs with the specified Key IDs."""
