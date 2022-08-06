@@ -294,8 +294,7 @@ async def parse_license(request: web.Request) -> web.Response:
             "type": key.type,
             "permissions": key.permissions,
         }
-        for key in cdm._sessions[session_id].keys
-        if not key_type or key.type == key_type
+        for key in cdm.get_keys(session_id, key_type)
     ]
 
     return web.json_response({
