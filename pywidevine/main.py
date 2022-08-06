@@ -117,9 +117,7 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
     log.info("[+] License Parsed Successfully")
 
     # print keys
-    # Note: This showcases how insecure a Python CDM implementation is
-    #       The keys should not be given to the user, but we cannot prevent this
-    for key in cdm._sessions[session_id].keys:
+    for key in cdm.get_keys(session_id):
         log.info(f"[{key.type}] {key.kid.hex}:{key.key.hex()}")
 
     # close session, disposes of session data
