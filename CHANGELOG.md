@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2022-08-17
+
+Small patch release for some fixes to the PSSH classes recent face-lift.
+
+### Changed
+
+- `PSSH.overwrite_key_ids` static method is now an instance method named `set_key_ids` and works on the current
+  instance instead of making and returning a new one.
+- `PSSH.get_key_ids` static method is now a property method named `key_ids`. This allows swift access to all the
+  Key IDs of the current access.
+- `PSSH.from_playready_pssh` class method is now an instance method named `playready_to_widevine` and now converts
+  the current instances values directly. This allows you to more easily instance as any PSSH, then convert afterwards.
+
 ## [1.4.0] - 2022-08-06
 
 This release is a face-lift for the PSSH class with a moderate amount of Cdm and Serve interface changes.  
@@ -223,6 +236,8 @@ This release is primarily a maintenance release for `serve` functionality but so
 
 Initial Release.
 
+[1.4.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.4.1
+[1.4.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.4.0
 [1.3.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.3.1
 [1.3.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.3.0
 [1.2.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.2.1
