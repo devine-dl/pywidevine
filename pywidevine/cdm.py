@@ -279,7 +279,10 @@ class Cdm:
         except ValueError:
             raise InvalidLicenseType(f"License Type {type_!r} is invalid")
 
-        request_id = get_random_bytes(16)
+        if self.device_type == Device.Types.ANDROID:
+            request_id = get_random_bytes(8) + session.number.to_bytes(8, "little")
+        else:
+            request_id = get_random_bytes(16)
 
         license_request = LicenseRequest()
         license_request.type = LicenseRequest.RequestType.Value("NEW")
