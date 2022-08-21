@@ -131,7 +131,7 @@ class Cdm:
         if len(self.__sessions) > self.MAX_NUM_OF_SESSIONS:
             raise TooManySessions(f"Too many Sessions open ({self.MAX_NUM_OF_SESSIONS}).")
 
-        session = Session()
+        session = Session(len(self.__sessions) + 1)
         self.__sessions[session.id] = session
 
         return session.id
