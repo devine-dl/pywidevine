@@ -280,7 +280,14 @@ class Cdm:
             raise InvalidLicenseType(f"License Type {type_!r} is invalid")
 
         if self.device_type == Device.Types.ANDROID:
-            request_id = get_random_bytes(8) + session.number.to_bytes(8, "little")
+            # OEMCrypto's request_id seems to be in AES CTR Counter block form with no suffix
+            # Bytes 5-8 does not seem random, in real tests they have been consecutive \x00 or \xFF
+            # Real example: A0DCE548000000000500000000000000
+            request_id = (get_random_bytes(4) + (b"\x00" * 4))  # (?)
+            request_id += session.number.to_bytes(8, "little")  # counter
+            # as you can see in the real example, it is stored as uppercase hex and re-encoded
+            # it's really 16 bytes of data, but it's stored as a 32-char HEX string (32 bytes)
+            request_id = request_id.hex().upper().encode()
         else:
             request_id = get_random_bytes(16)
 
