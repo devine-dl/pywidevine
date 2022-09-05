@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2] - 2022-09-05
+
+### Changed
+
+- Device's constructor no longer throws `ValueError` exceptions if it fails to parse the provided Client ID or it's
+  VMP data if any. It will now raise a `DecodeError`.
+
+### Fixed
+
+- Android Cdm Devices now use a Request ID formula similar to OEMCrypto library when generating a Challenge.
+  This formula has yet to be fully confirmed and ironed out, but it is better than the Chrome Cdm formula.
+- Various Proto Message Parsing now has full verification and expects the parsed response to be the same length
+  as the serialized input, or it will throw an error. For example, this prevents vague errors to happen when you
+  provide a bad License to `Cdm.parse_license`. It also prevents possibilities of it going past various other checks
+  depending on the first few bytes provided.
+
 ## [1.4.1] - 2022-08-17
 
 Small patch release for some fixes to the PSSH classes recent face-lift.
@@ -236,6 +252,7 @@ This release is primarily a maintenance release for `serve` functionality but so
 
 Initial Release.
 
+[1.4.2]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.4.2
 [1.4.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.4.1
 [1.4.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.4.0
 [1.3.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.3.1
