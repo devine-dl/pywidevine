@@ -113,7 +113,7 @@ class Device:
             if self.client_id.SerializeToString() != client_id:
                 raise DecodeError("partial parse")
         except DecodeError as e:
-            raise ValueError(f"Failed to parse client_id as a ClientIdentification, {e}")
+            raise DecodeError(f"Failed to parse client_id as a ClientIdentification, {e}")
 
         self.vmp = FileHashes()
         if self.client_id.vmp_data:
@@ -122,7 +122,7 @@ class Device:
                 if self.vmp.SerializeToString() != self.client_id.vmp_data:
                     raise DecodeError("partial parse")
             except DecodeError as e:
-                raise ValueError(f"Failed to parse Client ID's VMP data as a FileHashes, {e}")
+                raise DecodeError(f"Failed to parse Client ID's VMP data as a FileHashes, {e}")
 
         signed_drm_certificate = SignedDrmCertificate()
         drm_certificate = DrmCertificate()
