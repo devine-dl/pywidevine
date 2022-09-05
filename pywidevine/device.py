@@ -110,20 +110,37 @@ class Device:
         self.client_id = ClientIdentification()
         try:
             self.client_id.ParseFromString(client_id)
-        except DecodeError:
-            raise ValueError("Failed to parse client_id as a ClientIdentification")
+            if self.client_id.SerializeToString() != client_id:
+                raise DecodeError("partial parse")
+        except DecodeError as e:
+            raise ValueError(f"Failed to parse client_id as a ClientIdentification, {e}")
 
         self.vmp = FileHashes()
         if self.client_id.vmp_data:
             try:
                 self.vmp.ParseFromString(self.client_id.vmp_data)
-            except DecodeError:
-                raise ValueError("Failed to parse Client ID's VMP data as a FileHashes")
+                if self.vmp.SerializeToString() != self.client_id.vmp_data:
+                    raise DecodeError("partial parse")
+            except DecodeError as e:
+                raise ValueError(f"Failed to parse Client ID's VMP data as a FileHashes, {e}")
 
         signed_drm_certificate = SignedDrmCertificate()
-        signed_drm_certificate.ParseFromString(self.client_id.token)
         drm_certificate = DrmCertificate()
-        drm_certificate.ParseFromString(signed_drm_certificate.drm_certificate)
+
+        try:
+            signed_drm_certificate.ParseFromString(self.client_id.token)
+            if signed_drm_certificate.SerializeToString() != self.client_id.token:
+                raise DecodeError("partial parse")
+        except DecodeError as e:
+            raise DecodeError(f"Failed to parse the Signed DRM Certificate of the Client ID, {e}")
+
+        try:
+            drm_certificate.ParseFromString(signed_drm_certificate.drm_certificate)
+            if drm_certificate.SerializeToString() != signed_drm_certificate.drm_certificate:
+                raise DecodeError("partial parse")
+        except DecodeError as e:
+            raise DecodeError(f"Failed to parse the DRM Certificate of the Client ID, {e}")
+
         self.system_id = drm_certificate.system_id
 
     def __repr__(self) -> str:
@@ -190,6 +207,8 @@ class Device:
             if data.vmp:
                 try:
                     vmp.ParseFromString(data.vmp)
+                    if vmp.SerializeToString() != data.vmp:
+                        raise DecodeError("partial parse")
                 except DecodeError as e:
                     raise DecodeError(f"Failed to parse VMP data as FileHashes, {e}")
                 data.vmp = vmp
@@ -197,6 +216,8 @@ class Device:
                 client_id = ClientIdentification()
                 try:
                     client_id.ParseFromString(data.client_id)
+                    if client_id.SerializeToString() != data.client_id:
+                        raise DecodeError("partial parse")
                 except DecodeError as e:
                     raise DecodeError(f"Failed to parse VMP data as FileHashes, {e}")
 

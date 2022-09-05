@@ -175,8 +175,11 @@ class RemoteCdm(Cdm):
         r = r["data"]
 
         try:
+            challenge = base64.b64decode(r["challenge_b64"])
             license_message = SignedMessage()
-            license_message.ParseFromString(base64.b64decode(r["challenge_b64"]))
+            license_message.ParseFromString(challenge)
+            if license_message.SerializeToString() != challenge:
+                raise DecodeError("partial parse")
         except DecodeError as e:
             raise InvalidLicenseMessage(f"Failed to parse license request, {e}")
 
@@ -196,6 +199,8 @@ class RemoteCdm(Cdm):
             signed_message = SignedMessage()
             try:
                 signed_message.ParseFromString(license_message)
+                if signed_message.SerializeToString() != license_message:
+                    raise DecodeError("partial parse")
             except DecodeError as e:
                 raise InvalidLicenseMessage(f"Could not parse license_message as a SignedMessage, {e}")
             license_message = signed_message
