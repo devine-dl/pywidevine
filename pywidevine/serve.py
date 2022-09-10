@@ -54,7 +54,7 @@ async def ping(_) -> web.Response:
 
 
 @routes.get("/{device}/open")
-async def open(request: web.Request) -> web.Response:
+async def open_(request: web.Request) -> web.Response:
     secret_key = request.headers["X-Secret-Key"]
     device_name = request.match_info["device"]
     user = request.app["config"]["users"][secret_key]
