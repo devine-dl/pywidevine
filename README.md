@@ -26,6 +26,35 @@
 - 🗃️ YAML configuration files
 - ❤️ Forever FOSS!
 
+## Installation
+
+*Note: Requires [Python] 3.7.0 or newer with PIP installed.*
+
+```shell
+$ pip install pywidevine
+```
+
+You now have the `pywidevine` package installed and a `pywidevine` executable is now available.
+Check it out with `pywidevine --help` - Voilà 🎉!
+
+### From Source Code
+
+The following steps are instructions on download, preparing, and running the code under a Poetry environment.
+You can skip steps 3-5 with a simple `pip install .` call instead, but you miss out on a wide array of benefits.
+
+1. `git clone https://github.com/rlaphoenix/pywidevine`
+2. `cd pywidevine`
+3. (optional) `poetry config virtualenvs.in-project true` 
+4. `poetry install`
+5. `poetry run pywidevine --help`
+
+As seen in Step 5, running the `pywidevine` executable is somewhat different to a normal PIP installation.
+See [Poetry's Docs] on various ways of making calls under the virtual-environment.
+
+  [Python]: <https://python.org>
+  [Poetry]: <https://python-poetry.org>
+  [Poetry's Docs]: <https://python-poetry.org/docs/basic-usage/#using-your-virtual-environment>
+
 ## Disclaimer
 
 1. This project requires a valid Google-provisioned Private Key and Client Identification blob which are not
