@@ -167,7 +167,8 @@ class RemoteCdm(Cdm):
             url=f"{self.host}/{self.device_name}/get_license_challenge/{type_}",
             json={
                 "session_id": session_id.hex(),
-                "init_data": pssh.dumps()
+                "init_data": pssh.dumps(),
+                "privacy_mode": privacy_mode
             }
         ).json()
         if r["status"] != 200:

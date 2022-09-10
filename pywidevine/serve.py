@@ -194,6 +194,9 @@ async def get_license_challenge(request: web.Request) -> web.Response:
     # get session id
     session_id = bytes.fromhex(body["session_id"])
 
+    # get privacy mode flag
+    privacy_mode = body.get("privacy_mode", True)
+
     # get cdm
     cdm: Optional[Cdm] = request.app["cdms"].get((secret_key, device_name))
     if not cdm:
@@ -219,7 +222,7 @@ async def get_license_challenge(request: web.Request) -> web.Response:
             session_id=session_id,
             pssh=init_data,
             type_=license_type,
-            privacy_mode=True
+            privacy_mode=privacy_mode
         )
     except InvalidSession:
         return web.json_response({
