@@ -55,6 +55,16 @@ See [Poetry's Docs] on various ways of making calls under the virtual-environmen
   [Poetry]: <https://python-poetry.org>
   [Poetry's Docs]: <https://python-poetry.org/docs/basic-usage/#using-your-virtual-environment>
 
+## Troubleshooting
+
+### Executable `pywidevine` was not found
+
+Make sure the Python installation's Scripts directory is added to your Path Environment Variable.
+
+If this happened under a Poetry environment, make sure you use the appropriate Poetry-specific way of calling
+the executable. You may make this executable available globally by adding the .venv's Scripts folder to your
+Path Environment Variable.
+
 ## Disclaimer
 
 1. This project requires a valid Google-provisioned Private Key and Client Identification blob which are not
