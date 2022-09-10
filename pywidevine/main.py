@@ -29,7 +29,7 @@ def main(version: bool, debug: bool) -> None:
     if copyright_years != current_year:
         copyright_years = f"{copyright_years}-{current_year}"
 
-    log.info(f"pywidevine version {__version__} Copyright (c) {copyright_years} rlaphoenix")
+    log.info("pywidevine version %s Copyright (c) %s rlaphoenix", __version__, copyright_years)
     log.info("https://github.com/rlaphoenix/pywidevine")
     if version:
         return
@@ -68,17 +68,17 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
 
     # load device
     device = Device.load(device)
-    log.info(f"[+] Loaded Device ({device.system_id} L{device.security_level})")
+    log.info("[+] Loaded Device (%s L%s)", device.system_id, device.security_level)
     log.debug(device)
 
     # load cdm
     cdm = Cdm.from_device(device)
-    log.info(f"[+] Loaded CDM")
+    log.info("[+] Loaded CDM")
     log.debug(cdm)
 
     # open cdm session
     session_id = cdm.open()
-    log.info(f"[+] Opened CDM Session: {session_id.hex()}")
+    log.info("[+] Opened CDM Session: %s", session_id.hex())
 
     if privacy:
         # get service cert for license server via cert challenge
@@ -87,11 +87,15 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
             data=cdm.service_certificate_challenge
         )
         if service_cert.status_code != 200:
-            log.error(f"[-] Failed to get Service Privacy Certificate: [{service_cert.status_code}] {service_cert.text}")
+            log.error(
+                "[-] Failed to get Service Privacy Certificate: [%s] %s",
+                service_cert.status_code,
+                service_cert.text
+            )
             return
         service_cert = service_cert.content
         provider_id = cdm.set_service_certificate(session_id, service_cert)
-        log.info(f"[+] Set Service Privacy Certificate: {provider_id}")
+        log.info("[+] Set Service Privacy Certificate: %s", provider_id)
         log.debug(service_cert)
 
     # get license challenge
@@ -106,7 +110,7 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
         data=challenge
     )
     if licence.status_code != 200:
-        log.error(f"[-] Failed to send challenge: [{licence.status_code}] {licence.text}")
+        log.error("[-] Failed to send challenge: [%s] %s", licence.status_code, licence.text)
         return
     licence = licence.content
     log.info("[+] Got License Message")
@@ -118,7 +122,7 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
 
     # print keys
     for key in cdm.get_keys(session_id):
-        log.info(f"[{key.type}] {key.kid.hex}:{key.key.hex()}")
+        log.info("[%s] %s:%s", key.type, key.kid.hex, key.key.hex())
 
     # close session, disposes of session data
     cdm.close(session_id)
@@ -227,20 +231,20 @@ def create_device(
     out_path = (output or Path.cwd()) / f"{name}_{device.system_id}_l{device.security_level}.wvd"
     out_path.write_bytes(wvd_bin)
 
-    log.info(f"Created Widevine Device (.wvd) file, {out_path.name}")
-    log.info(f" + Type: {device.type.name}")
-    log.info(f" + System ID: {device.system_id}")
-    log.info(f" + Security Level: {device.security_level}")
-    log.info(f" + Flags: {device.flags}")
-    log.info(f" + Private Key: {bool(device.private_key)} ({device.private_key.size_in_bits()} bit)")
-    log.info(f" + Client ID: {bool(device.client_id)} ({len(device.client_id.SerializeToString())} bytes)")
+    log.info("Created Widevine Device (.wvd) file, %s", out_path.name)
+    log.info(" + Type: %s", device.type.name)
+    log.info(" + System ID: %s", device.system_id)
+    log.info(" + Security Level: %s", device.security_level)
+    log.info(" + Flags: %s", device.flags)
+    log.info(" + Private Key: %s (%s bit)", bool(device.private_key), device.private_key.size_in_bits())
+    log.info(" + Client ID: %s (%s bytes)", bool(device.client_id), len(device.client_id.SerializeToString()))
     if device.client_id.vmp_data:
         file_hashes_ = FileHashes()
         file_hashes_.ParseFromString(device.client_id.vmp_data)
-        log.info(f" + VMP: True ({len(file_hashes_.signatures)} signatures)")
+        log.info(" + VMP: True (%s signatures)", len(file_hashes_.signatures))
     else:
         log.info(" + VMP: False")
-    log.info(f" + Saved to: {out_path.absolute()}")
+    log.info(" + Saved to: %s", out_path.absolute())
 
 
 @main.command()
@@ -267,12 +271,12 @@ def migrate(ctx: click.Context, path: Path) -> None:
 
     migrated = 0
     for device in devices:
-        log.info(f"Migrating {device.name}...")
+        log.info("Migrating %s...", device.name)
 
         try:
             new_device = Device.migrate(device.read_bytes())
         except (ConstructError, ValueError) as e:
-            log.error(f" - {e}")
+            log.error(" - %s", e)
             continue
 
         log.debug(new_device)
@@ -281,7 +285,7 @@ def migrate(ctx: click.Context, path: Path) -> None:
         log.info(" + Success")
         migrated += 1
 
-    log.info(f"Migrated {migrated}/{len(devices)} devices!")
+    log.info("Migrated %s/%s devices!", migrated, len(devices))
 
 
 @main.command("serve", short_help="Serve your local CDM and Widevine Devices Remotely.")
