@@ -177,6 +177,51 @@ async def set_service_certificate(request: web.Request) -> web.Response:
     })
 
 
+@routes.post("/{device}/get_service_certificate")
+async def get_service_certificate(request: web.Request) -> web.Response:
+    secret_key = request.headers["X-Secret-Key"]
+    device_name = request.match_info["device"]
+
+    body = await request.json()
+    for required_field in ("session_id",):
+        if not body.get(required_field):
+            return web.json_response({
+                "status": 400,
+                "message": f"Missing required field '{required_field}' in JSON body."
+            }, status=400)
+
+    # get session id
+    session_id = bytes.fromhex(body["session_id"])
+
+    # get cdm
+    cdm: Optional[Cdm] = request.app["cdms"].get((secret_key, device_name))
+    if not cdm:
+        return web.json_response({
+            "status": 400,
+            "message": f"No Cdm session for {device_name} has been opened yet. No session to use."
+        }, status=400)
+
+    # get service certificate
+    try:
+        service_certificate = cdm.get_service_certificate(session_id)
+    except InvalidSession:
+        return web.json_response({
+            "status": 400,
+            "message": f"Invalid Session ID '{session_id.hex()}', it may have expired."
+        }, status=400)
+
+    if service_certificate:
+        service_certificate = base64.b64encode(service_certificate.SerializeToString()).decode()
+
+    return web.json_response({
+        "status": 200,
+        "message": "Successfully got the Service Certificate.",
+        "data": {
+            "service_certificate": service_certificate
+        }
+    })
+
+
 @routes.post("/{device}/get_license_challenge/{license_type}")
 async def get_license_challenge(request: web.Request) -> web.Response:
     secret_key = request.headers["X-Secret-Key"]

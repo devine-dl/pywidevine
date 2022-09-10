@@ -232,6 +232,24 @@ class Cdm:
             drm_certificate.ParseFromString(signed_drm_certificate.drm_certificate)
             return drm_certificate.provider_id
 
+    def get_service_certificate(self, session_id: bytes) -> Optional[SignedMessage]:
+        """
+        Get the currently set Service Privacy Certificate of the Session.
+
+        Parameters:
+            session_id: Session identifier.
+
+        Raises:
+            InvalidSession: If the Session identifier is invalid.
+
+        Returns the Service Certificate if one is set, otherwise None.
+        """
+        session = self.__sessions.get(session_id)
+        if not session:
+            raise InvalidSession(f"Session identifier {session_id!r} is invalid.")
+
+        return session.service_certificate
+
     def get_license_challenge(
         self,
         session_id: bytes,

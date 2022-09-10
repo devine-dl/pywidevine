@@ -6,14 +6,18 @@ import re
 from typing import Union, Optional
 
 import requests
+from Crypto.Hash import SHA1
 from Crypto.PublicKey import RSA
+from Crypto.Signature import pss
 from google.protobuf.message import DecodeError
 from pywidevine.cdm import Cdm
 from pywidevine.device import Device
-from pywidevine.exceptions import InvalidInitData, InvalidLicenseType, InvalidLicenseMessage, DeviceMismatch
+from pywidevine.exceptions import InvalidInitData, InvalidLicenseType, InvalidLicenseMessage, DeviceMismatch, \
+    SignatureMismatch
 from pywidevine.key import Key
 
-from pywidevine.license_protocol_pb2 import LicenseType, SignedMessage, License, ClientIdentification
+from pywidevine.license_protocol_pb2 import LicenseType, SignedMessage, License, ClientIdentification, \
+    SignedDrmCertificate
 from pywidevine.pssh import PSSH
 
 
@@ -138,6 +142,53 @@ class RemoteCdm(Cdm):
         r = r["data"]
 
         return r["provider_id"]
+
+    def get_service_certificate(self, session_id: bytes) -> Optional[SignedMessage]:
+        r = self.__session.post(
+            url=f"{self.host}/{self.device_name}/get_service_certificate",
+            json={
+                "session_id": session_id.hex()
+            }
+        ).json()
+        if r["status"] != 200:
+            raise ValueError(f"Cannot Get CDMs Service Certificate, {r['message']} [{r['status']}]")
+        r = r["data"]
+
+        service_certificate = r["service_certificate"]
+        if not service_certificate:
+            return None
+
+        service_certificate = base64.b64decode(service_certificate)
+        signed_message = SignedMessage()
+        signed_drm_certificate = SignedDrmCertificate()
+
+        try:
+            signed_message.ParseFromString(service_certificate)
+            if signed_message.SerializeToString() == service_certificate:
+                signed_drm_certificate.ParseFromString(signed_message.msg)
+            else:
+                signed_drm_certificate.ParseFromString(service_certificate)
+                if signed_drm_certificate.SerializeToString() != service_certificate:
+                    raise DecodeError("partial parse")
+                # Craft a SignedMessage as it's stored as a SignedMessage
+                signed_message.Clear()
+                signed_message.msg = signed_drm_certificate.SerializeToString()
+                # we don't need to sign this message, this is normal
+        except DecodeError as e:
+            # could be a direct unsigned DrmCertificate, but reject those anyway
+            raise DecodeError(f"Could not parse certificate as a SignedDrmCertificate, {e}")
+
+        try:
+            pss. \
+                new(RSA.import_key(self.root_cert.public_key)). \
+                verify(
+                    msg_hash=SHA1.new(signed_drm_certificate.drm_certificate),
+                    signature=signed_drm_certificate.signature
+                )
+        except (ValueError, TypeError):
+            raise SignatureMismatch("Signature Mismatch on SignedDrmCertificate, rejecting certificate")
+        else:
+            return signed_message
 
     def get_license_challenge(
         self,
