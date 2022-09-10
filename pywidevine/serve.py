@@ -251,11 +251,13 @@ async def get_license_challenge(request: web.Request) -> web.Response:
         }, status=400)
 
     # enforce service certificate (opt-in)
-    if request.app["config"].get("force_privacy_mode") and not cdm.get_service_certificate(session_id):
-        return web.json_response({
-            "status": 403,
-            "message": "No Service Certificate set but Privacy Mode is Enforced."
-        }, status=403)
+    if request.app["config"].get("force_privacy_mode"):
+        privacy_mode = True
+        if not cdm.get_service_certificate(session_id):
+            return web.json_response({
+                "status": 403,
+                "message": "No Service Certificate set but Privacy Mode is Enforced."
+            }, status=403)
 
     # get init data
     init_data = PSSH(body["init_data"])
