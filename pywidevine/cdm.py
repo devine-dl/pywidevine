@@ -208,14 +208,14 @@ class Cdm:
             else:
                 signed_drm_certificate.ParseFromString(certificate)
                 if signed_drm_certificate.SerializeToString() != certificate:
-                    raise DecodeError()
+                    raise DecodeError("partial parse")
                 # Craft a SignedMessage as it's stored as a SignedMessage
                 signed_message.Clear()
                 signed_message.msg = signed_drm_certificate.SerializeToString()
                 # we don't need to sign this message, this is normal
-        except DecodeError:
+        except DecodeError as e:
             # could be a direct unsigned DrmCertificate, but reject those anyway
-            raise DecodeError("Could not parse certificate as a SignedDrmCertificate")
+            raise DecodeError(f"Could not parse certificate as a SignedDrmCertificate, {e}")
 
         try:
             pss. \
