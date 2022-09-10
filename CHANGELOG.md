@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.3] - 2022-09-10
+
+RemoteCdm minimum supported Serve API version is now v1.4.3.
+
+### Added
+
+- Cdm now has a `get_service_certificate()` endpoint to get the currently set service certificate of a Session.
+  RemoteCdm and Serve also has support for these endpoints.
+
+### Changed
+
+- Added installation instructions, troubleshooting steps, a minimal example, and a list of features to the README.
+- The minimum version for lxml has been upped to >=4.9.1. This is due to some vulnerabilities present in all older
+  versions.
+- All f-string formatting in log statements have been replaced with logging formatting to improve performance when
+  logging is disabled.
+
+### Removed
+
+- The Protocol image has been removed from the README as it is too broad to Browser scenarios and some stuff on it
+  is too broad. If the viewer is really interested they can Google it to get a much better view into the Protocol.
+
+### Fixed
+
+- Serve's get_license_challenge can now disable privacy mode even if a service certificate is set, as long as privacy
+  mode is not enforced in settings.
+
 ## [1.4.2] - 2022-09-05
 
 ### Changed
@@ -252,6 +279,7 @@ This release is primarily a maintenance release for `serve` functionality but so
 
 Initial Release.
 
+[1.4.3]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.4.3
 [1.4.2]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.4.2
 [1.4.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.4.1
 [1.4.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.4.0
