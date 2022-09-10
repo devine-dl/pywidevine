@@ -16,6 +16,16 @@
     </a>
 </p>
 
+## Features
+
+- 🛡️ Security-first approach; All user input has Signatures verified
+- 👥 Remotely accessible Server/Client CDM code
+- 📦 Supports parsing and serialization of WVD (v2) provisions
+- 🛠️ Class for creation, parsing, and conversion of PSSH data
+- 🧩 Plug-and-play installation via PIP/PyPI
+- 🗃️ YAML configuration files
+- ❤️ Forever FOSS!
+
 ## Disclaimer
 
 1. This project requires a valid Google-provisioned Private Key and Client Identification blob which are not
