@@ -251,8 +251,7 @@ async def get_license_challenge(request: web.Request) -> web.Response:
         }, status=400)
 
     # enforce service certificate (opt-in)
-    # TODO: Add a way to check if there's a service certificate set properly
-    if request.app["config"].get("force_privacy_mode") and not cdm._Cdm__sessions[session_id].service_certificate:
+    if request.app["config"].get("force_privacy_mode") and not cdm.get_service_certificate(session_id):
         return web.json_response({
             "status": 403,
             "message": "No Service Certificate set but Privacy Mode is Enforced."
