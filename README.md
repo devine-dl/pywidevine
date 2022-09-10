@@ -76,23 +76,6 @@ Path Environment Variable.
 5. All efforts in this project have been the result of Reverse-Engineering, Publicly available research, and Trial
    & Error.
 
-## Protocol
-
-![widevine-overview](docs/images/widevine_overview.svg)
-
-### Web Server
-
-This may be an API/Server in front of a License Server. For example, Netflix's Custom MSL-based API front.
-This is evident by their custom Service Certificate which would only be needed if they had to read the License.
-
-### Net, Media Stack and MediaKeySession
-
-These generally refer to the Encrypted Media Extensions API on Browsers.
-
-Under the assumption of the Android Widevine ecosystem, you can think of `Net` as the Application Code, `Media Stack`
-as the OEM Crypto Library, and `MediaKeySession` as a Session. The orange wrapper titled `Browser` is effectively the
-Application as a whole, while `Platform` (in Green at the bottom) would be the OS or Other libraries.
-
 ## Key and Output Security
 
 *Licenses, Content Keys, and Decrypted Data is not secure in this CDM implementation.*
@@ -125,8 +108,7 @@ making a CDM in C++ has immediate security benefits and a lot of methods to obsc
 
 ## Credit
 
-- Widevine Icons &copy; Google.
-- Protocol Overview &copy; https://www.w3.org/TR/encrypted-media -- slightly modified to fit the page better.
+- Widevine Icon &copy; Google.
 - The awesome community for their shared research and insight into the Widevine Protocol and Key Derivation.
 
 ## License
