@@ -122,7 +122,7 @@ class PSSH:
         if not isinstance(flags, int):
             raise TypeError(f"Expected flags to be an int not {flags!r}")
         if flags < 0:
-            raise ValueError(f"Invalid flags, cannot be less than 0.")
+            raise ValueError("Invalid flags, cannot be less than 0.")
 
         if version == 0 and key_ids is not None and init_data is not None:
             # v0 boxes use only init_data in the pssh field, but we can use the key_ids within the init_data

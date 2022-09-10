@@ -84,7 +84,7 @@ class RemoteCdm(Cdm):
             raise ValueError(f"This Remote CDM API does not seem to be a pywidevine serve API ({server}).")
         server_version = re.search(r"pywidevine serve v([\d.]+)", server, re.IGNORECASE)
         if not server_version:
-            raise ValueError(f"The pywidevine server API is not stating the version correctly, cannot continue.")
+            raise ValueError("The pywidevine server API is not stating the version correctly, cannot continue.")
         server_version = server_version.group(1)
         if server_version < "1.4.0":
             raise ValueError(f"This pywidevine serve API version ({server_version}) is not supported.")
