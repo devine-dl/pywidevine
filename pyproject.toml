@@ -28,7 +28,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.7,<3.11"
-protobuf = "3.19.3"
+protobuf = "3.19.5"
 pymp4 = "^1.2.0"
 pycryptodome = "^3.15.0"
 click = "^8.1.3"
