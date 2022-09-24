@@ -1,11 +1,11 @@
 syntax = "proto2";
 
-package video_widevine;
+package pywidevine_license_protocol;
 
 // need this if we are using libprotobuf-cpp-2.3.0-lite
 option optimize_for = LITE_RUNTIME;
 
-option java_package = "com.google.video.widevine.protos";
+option java_package = "com.rlaphoenix.pywidevine.protos";
 
 enum LicenseType {
   STREAMING = 1;
