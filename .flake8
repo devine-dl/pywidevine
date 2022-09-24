@@ -1,0 +1,3 @@
+[flake8]
+exclude = *_pb2.py
+max-line-length = 120
