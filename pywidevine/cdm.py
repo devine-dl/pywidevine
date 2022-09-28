@@ -185,10 +185,16 @@ class Cdm:
             raise InvalidSession(f"Session identifier {session_id!r} is invalid.")
 
         if certificate is None:
-            drm_certificate = DrmCertificate()
-            drm_certificate.ParseFromString(session.service_certificate.drm_certificate)
+            if session.service_certificate:
+                signed_drm_certificate = SignedDrmCertificate()
+                signed_drm_certificate.ParseFromString(session.service_certificate)
+                drm_certificate = DrmCertificate()
+                drm_certificate.ParseFromString(signed_drm_certificate.drm_certificate)
+                provider_id = drm_certificate.provider_id
+            else:
+                provider_id = None
             session.service_certificate = None
-            return drm_certificate.provider_id
+            return provider_id
 
         if isinstance(certificate, str):
             try:
