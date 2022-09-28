@@ -62,7 +62,7 @@ class Cdm:
     root_cert = DrmCertificate()
     root_cert.ParseFromString(root_signed_cert.drm_certificate)
 
-    MAX_NUM_OF_SESSIONS = 50  # most common limit
+    MAX_NUM_OF_SESSIONS = 16
 
     def __init__(
         self,
