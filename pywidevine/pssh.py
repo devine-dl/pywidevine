@@ -19,8 +19,8 @@ class PSSH:
     """PSSH-related utilities. Somewhat Widevine-biased."""
 
     class SystemId:
-        Widevine = UUID(bytes=b"\xed\xef\x8b\xa9\x79\xd6\x4a\xce\xa3\xc8\x27\xdc\xd5\x1d\x21\xed")
-        PlayReady = UUID(bytes=b"\x9a\x04\xf0\x79\x98\x40\x42\x86\xab\x92\xe6\x5b\xe0\x88\x5f\x95")
+        Widevine = UUID(hex="edef8ba979d64acea3c827dcd51d21ed")
+        PlayReady = UUID(hex="9a04f07998404286ab92e65be0885f95")
 
     def __init__(self, data: Union[Container, str, bytes], strict: bool = False):
         """
