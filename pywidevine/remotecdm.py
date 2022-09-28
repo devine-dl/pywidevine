@@ -143,7 +143,7 @@ class RemoteCdm(Cdm):
 
         return r["provider_id"]
 
-    def get_service_certificate(self, session_id: bytes) -> Optional[SignedMessage]:
+    def get_service_certificate(self, session_id: bytes) -> Optional[SignedDrmCertificate]:
         r = self.__session.post(
             url=f"{self.host}/{self.device_name}/get_service_certificate",
             json={
@@ -159,21 +159,12 @@ class RemoteCdm(Cdm):
             return None
 
         service_certificate = base64.b64decode(service_certificate)
-        signed_message = SignedMessage()
         signed_drm_certificate = SignedDrmCertificate()
 
         try:
-            signed_message.ParseFromString(service_certificate)
-            if signed_message.SerializeToString() == service_certificate:
-                signed_drm_certificate.ParseFromString(signed_message.msg)
-            else:
-                signed_drm_certificate.ParseFromString(service_certificate)
-                if signed_drm_certificate.SerializeToString() != service_certificate:
-                    raise DecodeError("partial parse")
-                # Craft a SignedMessage as it's stored as a SignedMessage
-                signed_message.Clear()
-                signed_message.msg = signed_drm_certificate.SerializeToString()
-                # we don't need to sign this message, this is normal
+            signed_drm_certificate.ParseFromString(service_certificate)
+            if signed_drm_certificate.SerializeToString() != service_certificate:
+                raise DecodeError("partial parse")
         except DecodeError as e:
             # could be a direct unsigned DrmCertificate, but reject those anyway
             raise DecodeError(f"Could not parse certificate as a SignedDrmCertificate, {e}")
@@ -187,8 +178,8 @@ class RemoteCdm(Cdm):
                 )
         except (ValueError, TypeError):
             raise SignatureMismatch("Signature Mismatch on SignedDrmCertificate, rejecting certificate")
-        else:
-            return signed_message
+
+        return signed_drm_certificate
 
     def get_license_challenge(
         self,
