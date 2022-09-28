@@ -206,6 +206,7 @@ class Cdm:
 
         signed_message = SignedMessage()
         signed_drm_certificate = SignedDrmCertificate()
+        drm_certificate = DrmCertificate()
 
         try:
             signed_message.ParseFromString(certificate)
@@ -232,11 +233,16 @@ class Cdm:
                 )
         except (ValueError, TypeError):
             raise SignatureMismatch("Signature Mismatch on SignedDrmCertificate, rejecting certificate")
-        else:
-            session.service_certificate = signed_message
-            drm_certificate = DrmCertificate()
+
+        try:
             drm_certificate.ParseFromString(signed_drm_certificate.drm_certificate)
-            return drm_certificate.provider_id
+            if drm_certificate.SerializeToString() != signed_drm_certificate.drm_certificate:
+                raise DecodeError("partial parse")
+        except DecodeError as e:
+            raise DecodeError(f"Could not parse signed certificate's message as a DrmCertificate, {e}")
+
+        session.service_certificate = signed_message
+        return drm_certificate.provider_id
 
     def get_service_certificate(self, session_id: bytes) -> Optional[SignedMessage]:
         """
