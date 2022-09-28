@@ -199,7 +199,11 @@ class PSSH:
             cenc_header.ParseFromString(self.init_data)
             return [
                 # the key_ids value may or may not be hex underlying
-                UUID(bytes=key_id) if len(key_id) == 16 else UUID(hex=key_id.decode())
+                (
+                    UUID(bytes=key_id) if len(key_id) == 16 else  # normal
+                    UUID(hex=key_id.decode()) if len(key_id) == 32 else  # stored as hex
+                    UUID(int=int.from_bytes(key_id, "big"))  # assuming as number
+                )
                 for key_id in cenc_header.key_ids
             ]
 
