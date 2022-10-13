@@ -235,7 +235,7 @@ class PSSH:
             version=self.version,
             flags=self.flags,
             system_ID=self.system_id,
-            key_IDs=self.key_ids,
+            key_IDs=self.key_ids if self.version == 1 and self.key_ids else None,
             init_data=self.init_data
         ))
 
