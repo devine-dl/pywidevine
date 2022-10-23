@@ -413,9 +413,12 @@ class Cdm:
             key=self.__decrypter.decrypt(license_message.session_key)
         )
 
+        # explicitly use the original `license_message.msg` instead of a re-serializing from `licence`
+        # as some differences may end up in the output due to differences in the proto
+
         computed_signature = HMAC. \
             new(mac_key_server, digestmod=SHA256). \
-            update(licence.SerializeToString()). \
+            update(license_message.msg). \
             digest()
 
         if license_message.signature != computed_signature:
