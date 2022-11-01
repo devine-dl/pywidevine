@@ -413,11 +413,14 @@ class Cdm:
             key=self.__decrypter.decrypt(license_message.session_key)
         )
 
-        # explicitly use the original `license_message.msg` instead of a re-serializing from `licence`
-        # as some differences may end up in the output due to differences in the proto
+        # 1. Explicitly use the original `license_message.msg` instead of a re-serializing from `licence`
+        #    as some differences may end up in the output due to differences in the proto schema
+        # 2. The oemcrypto_core_message (unknown purpose) is part of the signature algorithm starting with
+        #    OEM Crypto API v16 and if available, must be prefixed when HMAC'ing a signature.
 
         computed_signature = HMAC. \
             new(mac_key_server, digestmod=SHA256). \
+            update(license_message.oemcrypto_core_message or b""). \
             update(license_message.msg). \
             digest()
 
