@@ -170,7 +170,7 @@ class PSSH:
             version=version,
             flags=flags,
             system_ID=PSSH.SystemId.Widevine,
-            key_IDs=key_ids if key_ids else None,
+            key_IDs=key_ids if key_ids and version == 1 else None,
             init_data=[init_data, b""][init_data is None]
         )))
 
