@@ -165,18 +165,21 @@ class PSSH:
                     f"Expecting init_data to be {WidevinePsshData}, hex, base64, or bytes, not {init_data!r}"
                 )
 
-        box = Box.parse(Box.build(dict(
+        pssh = cls(Box.parse(Box.build(dict(
             type=b"pssh",
             version=version,
             flags=flags,
             system_ID=PSSH.SystemId.Widevine,
-            key_IDs=key_ids if key_ids and version == 1 else None,
             init_data=[init_data, b""][init_data is None]
-        )))
+            # key_IDs should not be set yet
+        ))))
 
-        pssh = cls(box)
-
-        if key_ids and version == 0:
+        if key_ids:
+            # We must reinforce the version because pymp4 forces v0 if key_IDs is not set.
+            # The set_key_ids() func will set it efficiently in both init_data and the box where needed.
+            # The version must be reinforced ONLY if we have key_id data or there's a possibility of making
+            # a v1 PSSH box, that did not have key_IDs set in the PSSH box.
+            pssh.version = version
             pssh.set_key_ids(key_ids)
 
         return pssh
