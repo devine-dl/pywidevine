@@ -134,22 +134,23 @@ class PSSH:
                 raise ValueError("Version 1 PSSH boxes must use either init_data or key_ids but neither were provided")
 
         if key_ids is not None:
-            # ensure key_ids are bytes, supports hex, base64, and bytes
-            key_ids = [
-                (
-                    x.bytes if isinstance(x, UUID) else
-                    bytes.fromhex(x) if all(c in string.hexdigits for c in x) else
-                    base64.b64decode(x) if isinstance(x, str) else
-                    x
-                )
-                for x in key_ids
-            ]
-            if not all(isinstance(x, bytes) for x in key_ids):
-                not_bytes = [x for x in key_ids if not isinstance(x, bytes)]
+            # ensure key_ids are UUID, supports hex, base64, and bytes
+            if not all(isinstance(x, (UUID, bytes, str)) for x in key_ids):
+                not_bytes = [x for x in key_ids if not isinstance(x, (UUID, bytes, str))]
                 raise TypeError(
                     "Expected all of key_ids to be a UUID, hex, base64, or bytes, but one or more are not, "
                     f"{not_bytes!r}"
                 )
+            key_ids = [
+                UUID(bytes=key_id_b)
+                for key_id in key_ids
+                for key_id_b in [
+                    key_id.bytes if isinstance(key_id, UUID) else
+                    bytes.fromhex(key_id) if all(c in string.hexdigits for c in key_id) else
+                    base64.b64decode(key_id) if isinstance(key_id, str) else
+                    key_id
+                ]
+            ]
 
         if init_data is not None:
             if isinstance(init_data, WidevinePsshData):
@@ -169,14 +170,14 @@ class PSSH:
             version=version,
             flags=flags,
             system_ID=PSSH.SystemId.Widevine,
-            key_IDs=[UUID(bytes=kid) for kid in key_ids] if key_ids else None,
+            key_IDs=key_ids if key_ids else None,
             init_data=[init_data, b""][init_data is None]
         )))
 
         pssh = cls(box)
 
         if key_ids and version == 0:
-            pssh.set_key_ids([UUID(bytes=x) for x in key_ids])
+            pssh.set_key_ids(key_ids)
 
         return pssh
 
