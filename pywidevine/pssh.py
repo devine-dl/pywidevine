@@ -169,7 +169,7 @@ class PSSH:
             version=version,
             flags=flags,
             system_ID=PSSH.SystemId.Widevine,
-            key_ids=[key_ids, b""][key_ids is None],
+            key_IDs=[UUID(bytes=kid) for kid in key_ids] if key_ids else None,
             init_data=[init_data, b""][init_data is None]
         )))
 
