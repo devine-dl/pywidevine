@@ -127,6 +127,9 @@ class PSSH:
     def __repr__(self) -> str:
         return f"PSSH<{self.system_id}>(v{self.version}; {self.flags}, {self.key_ids}, {self.init_data})"
 
+    def __str__(self) -> str:
+        return self.dumps()
+
     @classmethod
     def new(
         cls,
