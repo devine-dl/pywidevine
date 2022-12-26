@@ -127,12 +127,18 @@ class PSSH:
     @classmethod
     def new(
         cls,
+        system_id: UUID,
         key_ids: Optional[list[Union[UUID, str, bytes]]] = None,
         init_data: Optional[Union[WidevinePsshData, str, bytes]] = None,
         version: int = 0,
         flags: int = 0
     ) -> PSSH:
         """Craft a new version 0 or 1 PSSH Box."""
+        if not system_id:
+            raise ValueError("A System ID must be specified.")
+        if not isinstance(system_id, UUID):
+            raise TypeError(f"Expected system_id to be a UUID, not {system_id!r}")
+
         if key_ids is not None and not isinstance(key_ids, list):
             raise TypeError(f"Expected key_ids to be a list not {key_ids!r}")
 
@@ -194,7 +200,7 @@ class PSSH:
             type=b"pssh",
             version=version,
             flags=flags,
-            system_ID=PSSH.SystemId.Widevine,
+            system_ID=system_id,
             init_data=[init_data, b""][init_data is None]
             # key_IDs should not be set yet
         ))))
