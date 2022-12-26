@@ -24,13 +24,19 @@ class PSSH:
 
     def __init__(self, data: Union[Container, str, bytes], strict: bool = False):
         """
-        Load a PSSH box or Widevine Cenc Header data as a new v0 PSSH box.
+        Load a PSSH box, WidevineCencHeader, or PlayReadyHeader.
+
+        When loading a WidevineCencHeader or PlayReadyHeader, a new v0 PSSH box will be
+        created and the header will be parsed and stored in the init_data field. However,
+        PlayReadyHeaders (and PlayReadyObjects) are not yet currently parsed and are
+        stored as bytes.
 
         [Strict mode (strict=True)]
 
         Supports the following forms of input data in either Base64 or Bytes form:
         - Full PSSH mp4 boxes (as defined by pymp4 Box).
         - Full Widevine Cenc Headers (as defined by WidevinePsshData proto).
+        - Full PlayReady Objects and Headers (as defined by Microsoft Docs).
 
         [Lenient mode (strict=False, default)]
 
@@ -77,21 +83,36 @@ class PSSH:
                     cenc_header = cenc_header.SerializeToString()
                     if cenc_header != data:  # not actually a WidevinePsshData
                         raise DecodeError()
+                    box = Box.parse(Box.build(dict(
+                        type=b"pssh",
+                        version=0,
+                        flags=0,
+                        system_ID=PSSH.SystemId.Widevine,
+                        init_data=cenc_header
+                    )))
                 except DecodeError:  # not a widevine cenc header
-                    if strict:
+                    if "</WRMHEADER>".encode("utf-16-le") in data:
+                        # TODO: Actually parse `data` as a PlayReadyHeader object and store that instead
+                        box = Box.parse(Box.build(dict(
+                            type=b"pssh",
+                            version=0,
+                            flags=0,
+                            system_ID=PSSH.SystemId.PlayReady,
+                            init_data=data
+                        )))
+                    elif strict:
                         raise DecodeError(f"Could not parse data as a {Container} nor a {WidevinePsshData}.")
-                    # Data is not a Widevine Cenc Header, it's something custom.
-                    # The license server likely has something custom to parse it.
-                    # See doc-string about Lenient mode for more information.
-                    cenc_header = data
-
-                box = Box.parse(Box.build(dict(
-                    type=b"pssh",
-                    version=0,
-                    flags=0,
-                    system_ID=PSSH.SystemId.Widevine,
-                    init_data=cenc_header
-                )))
+                    else:
+                        # Data is not a WidevineCencHeader nor a PlayReadyHeader.
+                        # The license server likely has something custom to parse it.
+                        # See doc-string about Lenient mode for more information.
+                        box = Box.parse(Box.build(dict(
+                            type=b"pssh",
+                            version=0,
+                            flags=0,
+                            system_ID=PSSH.SystemId.Widevine,
+                            init_data=data
+                        )))
 
         self.version = box.version
         self.flags = box.flags
