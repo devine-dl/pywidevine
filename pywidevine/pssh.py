@@ -17,7 +17,10 @@ from pywidevine.utils import load_xml
 
 
 class PSSH:
-    """PSSH-related utilities. Somewhat Widevine-biased."""
+    """
+    MP4 PSSH Box-related utilities.
+    Allows you to load, create, and modify various kinds of DRM system headers.
+    """
 
     class SystemId:
         Widevine = UUID(hex="edef8ba979d64acea3c827dcd51d21ed")
