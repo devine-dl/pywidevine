@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import binascii
 import string
+from io import BytesIO
 from typing import Union, Optional
 from uuid import UUID
 
@@ -214,9 +215,9 @@ class PSSH:
         Get all Key IDs from within the Box or Init Data, wherever possible.
 
         Supports:
-        - Version 1 Boxes
-        - Widevine Headers
-        - PlayReady Headers (4.0.0.0->4.3.0.0)
+        - Version 1 PSSH Boxes
+        - WidevineCencHeaders
+        - PlayReadyHeaders (4.0.0.0->4.3.0.0)
         """
         if self.version == 1 and self.__key_ids:
             return self.__key_ids
@@ -236,23 +237,42 @@ class PSSH:
             ]
 
         if self.system_id == PSSH.SystemId.PlayReady:
-            xml_string = self.init_data.decode("utf-16-le")
-            # some of these init data has garbage(?) in front of it
-            xml_string = xml_string[xml_string.index("<"):]
-            xml = load_xml(xml_string)
-            header_version = xml.attrib["version"]
-            if header_version == "4.0.0.0":
-                key_ids = xml.xpath("DATA/KID/text()")
-            elif header_version == "4.1.0.0":
-                key_ids = xml.xpath("DATA/PROTECTINFO/KID/@VALUE")
-            elif header_version in ("4.2.0.0", "4.3.0.0"):
-                key_ids = xml.xpath("DATA/PROTECTINFO/KIDS/KID/@VALUE")
-            else:
-                raise ValueError(f"Unsupported PlayReady header version {header_version}")
-            return [
-                UUID(bytes=base64.b64decode(key_id))
-                for key_id in key_ids
-            ]
+            # Assuming init data is a PRO (PlayReadyObject)
+            # https://learn.microsoft.com/en-us/playready/specifications/playready-header-specification
+            pro_data = BytesIO(self.init_data)
+            pro_length = int.from_bytes(pro_data.read(4), "little")
+            if pro_length != len(self.init_data):
+                raise ValueError("The PlayReadyObject seems to be corrupt (too big or small, or missing data).")
+            pro_record_count = int.from_bytes(pro_data.read(2), "little")
+
+            for _ in range(pro_record_count):
+                prr_type = int.from_bytes(pro_data.read(2), "little")
+                prr_length = int.from_bytes(pro_data.read(2), "little")
+                prr_value = pro_data.read(prr_length)
+                if prr_type != 0x01:
+                    # No PlayReady Header, skip and hope for something else
+                    # TODO: Add support for Embedded License Stores (0x03)
+                    continue
+
+                prr_header = load_xml(prr_value.decode("utf-16-le"))
+                prr_header_version = prr_header.attrib["version"]
+                if prr_header_version == "4.0.0.0":
+                    key_ids = prr_header.xpath("DATA/KID/text()")
+                elif prr_header_version == "4.1.0.0":
+                    key_ids = prr_header.xpath("DATA/PROTECTINFO/KID/@VALUE")
+                elif prr_header_version in ("4.2.0.0", "4.3.0.0"):
+                    # TODO: Retain the Encryption Scheme information in v4.3.0.0
+                    #       This is because some Key IDs can be AES-CTR while some are AES-CBC.
+                    #       Conversion to WidevineCencHeader could use this information.
+                    key_ids = prr_header.xpath("DATA/PROTECTINFO/KIDS/KID/@VALUE")
+                else:
+                    raise ValueError(f"Unsupported PlayReadyHeader version {prr_header_version}")
+                return [
+                    UUID(bytes=base64.b64decode(key_id))
+                    for key_id in key_ids
+                ]
+
+            raise ValueError("Unsupported PlayReadyObject, no PlayReadyHeader within the object.")
 
         raise ValueError(f"This PSSH is not supported by key_ids() property, {self.dumps()}")
 
