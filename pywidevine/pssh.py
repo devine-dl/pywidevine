@@ -99,6 +99,9 @@ class PSSH:
         self.__key_ids = box.key_IDs
         self.init_data = box.init_data
 
+    def __repr__(self) -> str:
+        return f"PSSH<{self.system_id}>(v{self.version}; {self.flags}, {self.key_ids}, {self.init_data})"
+
     @classmethod
     def new(
         cls,
