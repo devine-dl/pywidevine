@@ -9,10 +9,10 @@ from uuid import UUID
 import construct
 from construct import Container
 from google.protobuf.message import DecodeError
-from lxml import etree
 from pymp4.parser import Box
 
 from pywidevine.license_protocol_pb2 import WidevinePsshData
+from pywidevine.utils import load_xml
 
 
 class PSSH:
@@ -215,7 +215,7 @@ class PSSH:
             xml_string = self.init_data.decode("utf-16-le")
             # some of these init data has garbage(?) in front of it
             xml_string = xml_string[xml_string.index("<"):]
-            xml = etree.fromstring(xml_string)
+            xml = load_xml(xml_string)
             header_version = xml.attrib["version"]
             if header_version == "4.0.0.0":
                 key_ids = xml.xpath("DATA/KID/text()")
