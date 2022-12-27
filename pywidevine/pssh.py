@@ -326,6 +326,72 @@ class PSSH:
         self.init_data = cenc_header.SerializeToString()
         self.system_id = PSSH.SystemId.Widevine
 
+    def widevine_to_playready(
+        self,
+        la_url: Optional[str] = None,
+        lui_url: Optional[str] = None,
+        ds_id: Optional[bytes] = None,
+        decryptor_setup: Optional[str] = None,
+        custom_data: Optional[str] = None
+    ) -> None:
+        """
+        Convert Widevine PSSH data to PlayReady v4.3.0.0 PSSH data.
+
+        Note that it is impossible to create the CHECKSUM values for AES-CTR Key IDs
+        as you must encrypt the Key ID with the Content Encryption Key using AES-ECB.
+        This may cause software incompatibilities.
+
+        Parameters:
+            la_url: Contains the URL for the license acquisition Web service.
+                Only absolute URLs are allowed.
+            lui_url: Contains the URL for the license acquisition Web service.
+                Only absolute URLs are allowed.
+            ds_id: Service ID for the domain service.
+            decryptor_setup: This tag may only contain the value "ONDEMAND". It
+                indicates to an application that it should not expect the full
+                license chain for the content to be available for acquisition, or
+                already present on the client machine, prior to setting up the
+                media graph. If this tag is not set then it indicates that an
+                application can enforce the license to be acquired, or already
+                present on the client machine, prior to setting up the media graph.
+            custom_data: The content author can add custom XML inside this
+                element. Microsoft code does not act on any data contained inside
+                this element. The Syntax of this params XML is not validated.
+        """
+        if self.system_id != PSSH.SystemId.Widevine:
+            raise ValueError(f"This is not a Widevine PSSH, {self.system_id}")
+
+        key_ids_xml = ""
+        for key_id in self.key_ids:
+            # Note that it's impossible to create the CHECKSUM value without the Key for the KID
+            key_ids_xml += f"""
+            <KID ALGID="AESCTR" VALUE="{base64.b64encode(key_id.bytes).decode()}"></KID>
+            """
+
+        prr_value = f"""
+        <WRMHEADER xmlns="http://schemas.microsoft.com/DRM/2007/03/PlayReadyHeader" version="4.3.0.0">
+            <DATA>
+                <PROTECTINFO>
+                    <KIDS>{key_ids_xml}</KIDS>
+                </PROTECTINFO>
+                {f'<LA_URL>%s</LA_URL>' % la_url if la_url else ''}
+                {f'<LUI_URL>%s</LUI_URL>' % lui_url if lui_url else ''}
+                {f'<DS_ID>%s</DS_ID>' % base64.b64encode(ds_id).decode() if ds_id else ''}
+                {f'<DECRYPTORSETUP>%s</DECRYPTORSETUP>' % decryptor_setup if decryptor_setup else ''}
+                {f'<CUSTOMATTRIBUTES xmlns="">%s</CUSTOMATTRIBUTES>' % custom_data if custom_data else ''}
+            </DATA>
+        </WRMHEADER>
+        """.encode("utf-16-le")
+
+        prr_length = len(prr_value).to_bytes(2, "little")
+        prr_type = (1).to_bytes(2, "little")  # Has PlayReadyHeader
+        pro_record_count = (1).to_bytes(2, "little")
+        pro = pro_record_count + prr_type + prr_length + prr_value
+        pro = (len(pro) + 4).to_bytes(4, "little") + pro
+
+        self.init_data = pro
+        self.system_id = PSSH.SystemId.PlayReady
+
     def set_key_ids(self, key_ids: list[UUID]) -> None:
         """Overwrite all Key IDs with the specified Key IDs."""
         if self.system_id != PSSH.SystemId.Widevine:
