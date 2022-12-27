@@ -303,7 +303,7 @@ class PSSH:
         """Export the PSSH object as a full PSSH box in base64 form."""
         return base64.b64encode(self.dump()).decode()
 
-    def playready_to_widevine(self) -> None:
+    def to_widevine(self) -> None:
         """
         Convert PlayReady PSSH data to Widevine PSSH data.
 
@@ -311,8 +311,8 @@ class PSSH:
         can be used in a Widevine PSSH Header. The converted data may or may not result
         in an accepted PSSH. It depends on what the License Server is expecting.
         """
-        if self.system_id != PSSH.SystemId.PlayReady:
-            raise ValueError(f"This is not a PlayReady PSSH, {self.system_id}")
+        if self.system_id == PSSH.SystemId.Widevine:
+            raise ValueError("This is already a Widevine PSSH")
 
         cenc_header = WidevinePsshData()
         cenc_header.algorithm = 1  # 0=Clear, 1=AES-CTR
@@ -326,7 +326,7 @@ class PSSH:
         self.init_data = cenc_header.SerializeToString()
         self.system_id = PSSH.SystemId.Widevine
 
-    def widevine_to_playready(
+    def to_playready(
         self,
         la_url: Optional[str] = None,
         lui_url: Optional[str] = None,
@@ -358,8 +358,8 @@ class PSSH:
                 element. Microsoft code does not act on any data contained inside
                 this element. The Syntax of this params XML is not validated.
         """
-        if self.system_id != PSSH.SystemId.Widevine:
-            raise ValueError(f"This is not a Widevine PSSH, {self.system_id}")
+        if self.system_id == PSSH.SystemId.PlayReady:
+            raise ValueError("This is already a PlayReady PSSH")
 
         key_ids_xml = ""
         for key_id in self.key_ids:
