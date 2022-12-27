@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.3] - 2022-12-27
+
+### Added
+
+- Added a new utility `load_xml()` to parse XML data with lxml ignoring Namespaces.
+- PSSH class now has a `__str__` and `__repr__` representation to print the object in more Human-friendly and
+  useful ways. `str(pssh)` is now identical to `pssh.dumps()` and `repr(pssh)` or just `pssh` in some cases will
+  result in a nice overview of the PSSHs contents.
+- Added new `to_playready()` method to convert Widevine PSSH Data to PlayReady PSSH Data. Please note that the
+  Checksums for AES-CTR and COCKTAIL KIDs cannot be calculated as the Content Encryption Key would be needed.
+
+### Changed
+
+- You must now explicitly specify the System ID to use when creating a new PSSH box.
+  This allows you to now create PlayReady PSSH boxes.
+- The `playready_to_widevine()` method has been renamed to just `to_widevine()`.
+
+### Fixed
+
+- Fix the capitalization of the `key_IDs` field, and it's value when creating a new PSSH box.
+- Fix the ability to create v0 PSSH boxes by only setting the `key_IDs` field when the version is set to `1`.
+- Fix parsing of Key IDs within PlayReadyHeaders by using the new `load_xml()` utility to ignore namespaces so
+  that `xpath` can correctly locate any and all KID tags.
+- Fix loading of PlayReadyHeaders (and PlayReadyObjects) as PSSH boxes. It would previously load it under the
+  Widevine SystemID breaking all PlayReady-specific code after construction.
+- Fix support for loading PlayReadyObjects with more than one PlayReadyHeader (more than one record).
+
 ## [1.5.2] - 2022-10-11
 
 ### Fixed
@@ -332,6 +359,7 @@ This release is primarily a maintenance release for `serve` functionality but so
 
 Initial Release.
 
+[1.5.3]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.5.3
 [1.5.2]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.5.2
 [1.5.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.5.1
 [1.5.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.5.0
