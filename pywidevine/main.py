@@ -8,6 +8,8 @@ import click
 import requests
 from construct import ConstructError
 from unidecode import unidecode, UnidecodeError
+import yaml
+from google.protobuf.json_format import MessageToDict
 
 from pywidevine import __version__
 from pywidevine.cdm import Cdm
@@ -245,6 +247,85 @@ def create_device(
     else:
         log.info(" + VMP: False")
     log.info(" + Saved to: %s", out_path.absolute())
+
+
+@main.command()
+@click.argument("wvd_path", type=Path)
+@click.option("-o", "--out_dir", type=Path, default=None, help="Output Directory")
+@click.pass_context
+def export_device(ctx: click.Context, wvd_path: Path, out_dir: Optional[Path] = None) -> None:
+    """
+    Export a Widevine Device (.wvd) file to an RSA Private Key (PEM and DER) and Client ID Blob.
+    Optionally also a VMP (Verified Media Path) Blob, which will be stored in the Client ID.
+
+    If an output directory is not specified, it will be stored in the current working directory.
+    """
+    if not wvd_path.is_file():
+        raise click.UsageError("wvd_path: Not a path to a file, or it doesn't exist.", ctx)
+
+    log = logging.getLogger("export-device")
+    log.info("Exporting Widevine Device (.wvd) file, %s", wvd_path.stem)
+
+    if not out_dir:
+        out_dir = Path.cwd()
+
+    out_path = out_dir / wvd_path.stem
+    if out_path.exists():
+        if any(out_path.iterdir()):
+            log.error("Output directory is not empty, cannot overwrite.")
+            return
+        else:
+            log.warning("Output directory already exists, but is empty.")
+    else:
+        out_path.mkdir(parents=True)
+
+    device = Device.load(wvd_path)
+
+    log.info(f"L{device.security_level} {device.system_id} {device.type.name}")
+    log.info(f"Saving to: {out_path}")
+
+    device_meta = {
+        "wvd": {
+            "device_type": device.type.name,
+            "security_level": device.security_level,
+            **device.flags
+        },
+        "client_info": {},
+        "capabilities": MessageToDict(device.client_id, preserving_proto_field_name=True)["client_capabilities"]
+    }
+    for client_info in device.client_id.client_info:
+        device_meta["client_info"][client_info.name] = client_info.value
+
+    device_meta_path = out_path / "metadata.yml"
+    device_meta_path.write_text(yaml.dump(device_meta), encoding="utf8")
+    log.info("Exported Device Metadata as metadata.yml")
+
+    if device.private_key:
+        private_key_path = out_path / "private_key.pem"
+        private_key_path.write_text(
+            data=device.private_key.export_key().decode(),
+            encoding="utf8"
+        )
+        private_key_path.with_suffix(".der").write_bytes(
+            device.private_key.export_key(format="DER")
+        )
+        log.info("Exported Private Key as private_key.der and private_key.pem")
+    else:
+        log.warning("No Private Key available")
+
+    if device.client_id:
+        client_id_path = out_path / "client_id.bin"
+        client_id_path.write_bytes(device.client_id.SerializeToString())
+        log.info("Exported Client ID as client_id.bin")
+    else:
+        log.warning("No Client ID available")
+
+    if device.client_id.vmp_data:
+        vmp_path = out_path / "vmp.bin"
+        vmp_path.write_bytes(device.client_id.vmp_data)
+        log.info("Exported VMP (File Hashes) as vmp.bin")
+    else:
+        log.info("No VMP (File Hashes) available")
 
 
 @main.command()
