@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2023-02-03
+
+### Added
+
+- Added full support for Python 3.11.
+- Added new `export-device` command-line function to export WVD files back as files. I.e., a private key and client ID
+  blob file.
+
+### Changed
+
+- The PyYAML dependency is now required even if you do not install Pywidevine with the `serve` extra dependencies.
+- This was required for exporting WVD metadata in the new `export-device` command-line function.
+
 ## [1.5.3] - 2022-12-27
 
 ### Added
@@ -359,6 +372,7 @@ This release is primarily a maintenance release for `serve` functionality but so
 
 Initial Release.
 
+[1.6.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.6.0
 [1.5.3]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.5.3
 [1.5.2]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.5.2
 [1.5.1]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.5.1
