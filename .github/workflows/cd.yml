@@ -18,7 +18,7 @@ jobs:
     - name: Install Poetry
       uses: abatilo/actions-poetry@v2.1.0
       with:
-        poetry-version: '1.1.11'
+        poetry-version: '1.3.2'
     - name: Configure poetry
       run: poetry config virtualenvs.in-project true
     - name: Install dependencies
