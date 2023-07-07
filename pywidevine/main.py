@@ -230,7 +230,13 @@ def create_device(
     except UnidecodeError as e:
         raise click.ClickException(f"Failed to sanitize name, {e}")
 
-    out_path = (output or Path.cwd()) / f"{name}_{device.system_id}_l{device.security_level}.wvd"
+    if output:
+        out_dir = output
+        out_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        out_dir = Path.cwd()
+
+    out_path = out_dir / f"{name}_{device.system_id}_l{device.security_level}.wvd"
     out_path.write_bytes(wvd_bin)
 
     log.info("Created Widevine Device (.wvd) file, %s", out_path.name)
