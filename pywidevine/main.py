@@ -176,7 +176,7 @@ def test(ctx: click.Context, device: Path, privacy: bool):
 @click.option("-k", "--key", type=Path, required=True, help="Device RSA Private Key in PEM or DER format")
 @click.option("-c", "--client_id", type=Path, required=True, help="Widevine ClientIdentification Blob file")
 @click.option("-v", "--vmp", type=Path, default=None, help="Widevine FileHashes Blob file")
-@click.option("-o", "--output", type=Path, default=None, help="Output Directory")
+@click.option("-o", "--output", type=Path, default=None, help="Output Path or Directory")
 @click.pass_context
 def create_device(
     ctx: click.Context,
@@ -230,13 +230,15 @@ def create_device(
     except UnidecodeError as e:
         raise click.ClickException(f"Failed to sanitize name, {e}")
 
-    if output:
-        out_dir = output
-        out_dir.mkdir(parents=True, exist_ok=True)
+    if output and output.suffix:
+        if output.suffix.lower() != ".wvd":
+            log.warning(f"Saving WVD with the file extension '{output.suffix}' but '.wvd' is recommended.")
+        out_path = output
     else:
-        out_dir = Path.cwd()
+        out_dir = output or Path.cwd()
+        out_path = out_dir / f"{name}_{device.system_id}_l{device.security_level}.wvd"
 
-    out_path = out_dir / f"{name}_{device.system_id}_l{device.security_level}.wvd"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_bytes(wvd_bin)
 
     log.info("Created Widevine Device (.wvd) file, %s", out_path.name)
