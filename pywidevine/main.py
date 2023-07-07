@@ -238,6 +238,10 @@ def create_device(
         out_dir = output or Path.cwd()
         out_path = out_dir / f"{name}_{device.system_id}_l{device.security_level}.wvd"
 
+    if out_path.exists():
+        log.error(f"A file already exists at the path '{out_path}', cannot overwrite.")
+        return
+
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_bytes(wvd_bin)
 
