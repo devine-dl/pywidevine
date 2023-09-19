@@ -20,8 +20,8 @@ except ImportError:
 from pywidevine import __version__
 from pywidevine.cdm import Cdm
 from pywidevine.device import Device
-from pywidevine.exceptions import TooManySessions, InvalidSession, SignatureMismatch, InvalidInitData, \
-    InvalidLicenseType, InvalidLicenseMessage, InvalidContext
+from pywidevine.exceptions import (InvalidContext, InvalidInitData, InvalidLicenseMessage, InvalidLicenseType,
+                                   InvalidSession, SignatureMismatch, TooManySessions)
 
 routes = web.RouteTableDef()
 

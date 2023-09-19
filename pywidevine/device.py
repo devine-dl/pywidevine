@@ -14,7 +14,7 @@ from construct import Padded, Padding, Struct, this
 from Crypto.PublicKey import RSA
 from google.protobuf.message import DecodeError
 
-from pywidevine.license_protocol_pb2 import ClientIdentification, FileHashes, SignedDrmCertificate, DrmCertificate
+from pywidevine.license_protocol_pb2 import ClientIdentification, DrmCertificate, FileHashes, SignedDrmCertificate
 
 
 class _Types(Enum):

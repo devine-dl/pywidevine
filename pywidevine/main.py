@@ -6,15 +6,15 @@ from zlib import crc32
 
 import click
 import requests
-from construct import ConstructError
-from unidecode import unidecode, UnidecodeError
 import yaml
+from construct import ConstructError
 from google.protobuf.json_format import MessageToDict
+from unidecode import UnidecodeError, unidecode
 
 from pywidevine import __version__
 from pywidevine.cdm import Cdm
 from pywidevine.device import Device
-from pywidevine.license_protocol_pb2 import LicenseType, FileHashes
+from pywidevine.license_protocol_pb2 import FileHashes, LicenseType
 from pywidevine.pssh import PSSH
 
 
@@ -397,8 +397,8 @@ def serve_(config: Path, host: str, port: int):
     Host as 127.0.0.1 may block remote access even if port-forwarded.
     Instead, use 0.0.0.0 and ensure the TCP port you choose is forwarded.
     """
-    from pywidevine import serve
-    import yaml
+    from pywidevine import serve  # isort:skip
+    import yaml  # isort:skip
 
     config = yaml.safe_load(config.read_text(encoding="utf8"))
     serve.run(config, host, port)

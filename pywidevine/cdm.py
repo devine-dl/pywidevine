@@ -7,11 +7,11 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Union, Optional
+from typing import Optional, Union
 from uuid import UUID
 
 from Crypto.Cipher import AES, PKCS1_OAEP
-from Crypto.Hash import SHA1, HMAC, SHA256, CMAC
+from Crypto.Hash import CMAC, HMAC, SHA1, SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from Crypto.Signature import pss
@@ -19,11 +19,12 @@ from Crypto.Util import Padding
 from google.protobuf.message import DecodeError
 
 from pywidevine.device import Device
-from pywidevine.exceptions import TooManySessions, InvalidSession, InvalidLicenseType, SignatureMismatch, \
-    InvalidInitData, InvalidLicenseMessage, NoKeysLoaded, InvalidContext
+from pywidevine.exceptions import (InvalidContext, InvalidInitData, InvalidLicenseMessage, InvalidLicenseType,
+                                   InvalidSession, NoKeysLoaded, SignatureMismatch, TooManySessions)
 from pywidevine.key import Key
-from pywidevine.license_protocol_pb2 import DrmCertificate, SignedMessage, SignedDrmCertificate, LicenseType, \
-    LicenseRequest, ProtocolVersion, ClientIdentification, EncryptedClientIdentification, License
+from pywidevine.license_protocol_pb2 import (ClientIdentification, DrmCertificate, EncryptedClientIdentification,
+                                             License, LicenseRequest, LicenseType, ProtocolVersion,
+                                             SignedDrmCertificate, SignedMessage)
 from pywidevine.pssh import PSSH
 from pywidevine.session import Session
 from pywidevine.utils import get_binary_path

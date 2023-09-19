@@ -4,7 +4,7 @@ import base64
 import binascii
 import string
 from io import BytesIO
-from typing import Union, Optional
+from typing import Optional, Union
 from uuid import UUID
 
 import construct

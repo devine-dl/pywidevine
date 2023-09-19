@@ -3,21 +3,21 @@ from __future__ import annotations
 import base64
 import binascii
 import re
-from typing import Union, Optional
+from typing import Optional, Union
 
 import requests
 from Crypto.Hash import SHA1
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pss
 from google.protobuf.message import DecodeError
+
 from pywidevine.cdm import Cdm
 from pywidevine.device import Device
-from pywidevine.exceptions import InvalidInitData, InvalidLicenseType, InvalidLicenseMessage, DeviceMismatch, \
-    SignatureMismatch
+from pywidevine.exceptions import (DeviceMismatch, InvalidInitData, InvalidLicenseMessage, InvalidLicenseType,
+                                   SignatureMismatch)
 from pywidevine.key import Key
-
-from pywidevine.license_protocol_pb2 import LicenseType, SignedMessage, License, ClientIdentification, \
-    SignedDrmCertificate
+from pywidevine.license_protocol_pb2 import (ClientIdentification, License, LicenseType, SignedDrmCertificate,
+                                             SignedMessage)
 from pywidevine.pssh import PSSH
 
 

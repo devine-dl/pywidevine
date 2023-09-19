@@ -43,3 +43,7 @@ serve = ["aiohttp", "PyYAML"]
 
 [tool.poetry.scripts]
 pywidevine = "pywidevine.main:main"
+
+[tool.isort]
+line_length = 118
+extend_skip_glob = ["*_pb2.py", "*_pb2.pyi"]
