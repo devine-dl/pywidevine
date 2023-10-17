@@ -33,7 +33,6 @@ pymp4 = "^1.4.0"
 pycryptodome = "^3.19.0"
 click = "^8.1.7"
 requests = "^2.31.0"
-lxml = ">=4.9.3"
 Unidecode = "^1.3.6"
 PyYAML = "^6.0.1"
 aiohttp = {version = "^3.8.5", optional = true}
