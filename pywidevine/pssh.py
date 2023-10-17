@@ -6,7 +6,7 @@ import string
 from io import BytesIO
 from typing import Optional, Union
 from uuid import UUID
-from xml.etree import ElementTree
+from xml.etree.ElementTree import XML
 
 import construct
 from construct import Container
@@ -267,7 +267,7 @@ class PSSH:
                     continue
 
                 wrm_ns = {"wrm": "http://schemas.microsoft.com/DRM/2007/03/PlayReadyHeader"}
-                prr_header = ElementTree.fromstring(prr_value.decode("utf-16-le"))
+                prr_header = XML(prr_value.decode("utf-16-le"))
                 prr_header_version = prr_header.get("version")
                 if prr_header_version == "4.0.0.0":
                     key_ids = [element.text for element in prr_header.findall("./wrm:DATA/wrm:KID", namespaces=wrm_ns)]
