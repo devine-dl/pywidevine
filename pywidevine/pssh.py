@@ -270,16 +270,26 @@ class PSSH:
                 prr_header = XML(prr_value.decode("utf-16-le"))
                 prr_header_version = prr_header.get("version")
                 if prr_header_version == "4.0.0.0":
-                    key_ids = [element.text for element in prr_header.findall("./wrm:DATA/wrm:KID", namespaces=wrm_ns)]
+                    key_ids = [
+                        x.text
+                        for x in prr_header.findall("./wrm:DATA/wrm:KID", wrm_ns)
+                    ]
                 elif prr_header_version == "4.1.0.0":
-                    key_ids = [element.get("VALUE") for element in prr_header.findall("./wrm:DATA/wrm:PROTECTINFO/wrm:KID", namespaces=wrm_ns)]
+                    key_ids = [
+                        x.get("VALUE")
+                        for x in prr_header.findall("./wrm:DATA/wrm:PROTECTINFO/wrm:KID", wrm_ns)
+                    ]
                 elif prr_header_version in ("4.2.0.0", "4.3.0.0"):
                     # TODO: Retain the Encryption Scheme information in v4.3.0.0
                     #       This is because some Key IDs can be AES-CTR while some are AES-CBC.
                     #       Conversion to WidevineCencHeader could use this information.
-                    key_ids = [element.get("VALUE") for element in prr_header.findall("./wrm:DATA/wrm:PROTECTINFO/wrm:KIDS/wrm:KID", namespaces=wrm_ns)]
+                    key_ids = [
+                        x.get("VALUE")
+                        for x in prr_header.findall("./wrm:DATA/wrm:PROTECTINFO/wrm:KIDS/wrm:KID", wrm_ns)
+                    ]
                 else:
                     raise ValueError(f"Unsupported PlayReadyHeader version {prr_header_version}")
+
                 return [
                     UUID(bytes=base64.b64decode(key_id))
                     for key_id in key_ids
