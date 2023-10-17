@@ -6,6 +6,7 @@ import string
 from io import BytesIO
 from typing import Optional, Union
 from uuid import UUID
+from xml.etree import ElementTree
 
 import construct
 from construct import Container
@@ -13,7 +14,6 @@ from google.protobuf.message import DecodeError
 from pymp4.parser import Box
 
 from pywidevine.license_protocol_pb2 import WidevinePsshData
-from pywidevine.utils import load_xml
 
 
 class PSSH:
@@ -266,17 +266,18 @@ class PSSH:
                     # TODO: Add support for Embedded License Stores (0x03)
                     continue
 
-                prr_header = load_xml(prr_value.decode("utf-16-le"))
-                prr_header_version = prr_header.attrib["version"]
+                wrm_ns = {"wrm": "http://schemas.microsoft.com/DRM/2007/03/PlayReadyHeader"}
+                prr_header = ElementTree.fromstring(prr_value.decode("utf-16-le"))
+                prr_header_version = prr_header.get("version")
                 if prr_header_version == "4.0.0.0":
-                    key_ids = prr_header.xpath("DATA/KID/text()")
+                    key_ids = [element.text for element in prr_header.findall("./wrm:DATA/wrm:KID", namespaces=wrm_ns)]
                 elif prr_header_version == "4.1.0.0":
-                    key_ids = prr_header.xpath("DATA/PROTECTINFO/KID/@VALUE")
+                    key_ids = [element.get("VALUE") for element in prr_header.findall("./wrm:DATA/wrm:PROTECTINFO/wrm:KID", namespaces=wrm_ns)]
                 elif prr_header_version in ("4.2.0.0", "4.3.0.0"):
                     # TODO: Retain the Encryption Scheme information in v4.3.0.0
                     #       This is because some Key IDs can be AES-CTR while some are AES-CBC.
                     #       Conversion to WidevineCencHeader could use this information.
-                    key_ids = prr_header.xpath("DATA/PROTECTINFO/KIDS/KID/@VALUE")
+                    key_ids = [element.get("VALUE") for element in prr_header.findall("./wrm:DATA/wrm:PROTECTINFO/wrm:KIDS/wrm:KID", namespaces=wrm_ns)]
                 else:
                     raise ValueError(f"Unsupported PlayReadyHeader version {prr_header_version}")
                 return [
