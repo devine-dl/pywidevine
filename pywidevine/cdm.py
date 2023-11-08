@@ -151,7 +151,7 @@ class Cdm:
             raise InvalidSession(f"Session identifier {session_id!r} is invalid.")
         del self.__sessions[session_id]
 
-    def set_service_certificate(self, session_id: bytes, certificate: Optional[Union[bytes, str]]) -> str:
+    def set_service_certificate(self, session_id: bytes, certificate: Optional[Union[bytes, str]]) -> Optional[str]:
         """
         Set a Service Privacy Certificate for Privacy Mode. (optional but recommended)
 
@@ -178,7 +178,8 @@ class Cdm:
                 match the underlying DrmCertificate.
 
         Returns the Service Provider ID of the verified DrmCertificate if successful.
-        If certificate is None, it will return the now unset certificate's Provider ID.
+        If certificate is None, it will return the now-unset certificate's Provider ID,
+        or None if no certificate was set yet.
         """
         session = self.__sessions.get(session_id)
         if not session:
