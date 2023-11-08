@@ -297,4 +297,4 @@ class RemoteCdm(Cdm):
         ]
 
 
-__ALL__ = (RemoteCdm,)
+__all__ = ("RemoteCdm",)

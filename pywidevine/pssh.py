@@ -437,3 +437,6 @@ class PSSH:
         ]
 
         return uuids
+
+
+__all__ = ("PSSH",)

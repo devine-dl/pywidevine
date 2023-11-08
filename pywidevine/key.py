@@ -61,3 +61,6 @@ class Key:
             kid += b"\x00" * (16 - len(kid))
 
         return UUID(bytes=kid)
+
+
+__all__ = ("Key",)

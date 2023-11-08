@@ -638,4 +638,4 @@ class Cdm:
         return enc_key, mac_key_server, mac_key_client
 
 
-__ALL__ = (Cdm,)
+__all__ = ("Cdm",)

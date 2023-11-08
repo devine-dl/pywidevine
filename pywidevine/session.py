@@ -13,3 +13,6 @@ class Session:
         self.service_certificate: Optional[SignedDrmCertificate] = None
         self.context: dict[bytes, tuple[bytes, bytes]] = {}
         self.keys: list[Key] = []
+
+
+__all__ = ("Session",)

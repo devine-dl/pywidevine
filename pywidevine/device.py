@@ -237,4 +237,4 @@ class Device:
             raise ValueError(f"Device Data seems to be corrupt or invalid, or migration failed, {e}")
 
 
-__ALL__ = (Device, DeviceTypes)
+__all__ = ("Device", "DeviceTypes")
