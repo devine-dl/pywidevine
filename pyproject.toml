@@ -27,15 +27,15 @@ classifiers = [
 "Changelog" = "https://github.com/rlaphoenix/pywidevine/blob/master/CHANGELOG.md"
 
 [tool.poetry.dependencies]
-python = ">=3.7,<3.12"
-protobuf = "^4.24.3"
+python = ">=3.7,<4.0"
+protobuf = "^4.24.4"
 pymp4 = "^1.4.0"
 pycryptodome = "^3.19.0"
 click = "^8.1.7"
 requests = "^2.31.0"
-Unidecode = "^1.3.6"
+Unidecode = "^1.3.7"
 PyYAML = "^6.0.1"
-aiohttp = {version = "^3.8.5", optional = true}
+aiohttp = {version = "^3.8.6", optional = true}
 
 [tool.poetry.extras]
 serve = ["aiohttp", "PyYAML"]
