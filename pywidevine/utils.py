@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 
 def get_binary_path(*names: str) -> Optional[Path]:

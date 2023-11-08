@@ -385,11 +385,11 @@ class PSSH:
                 <PROTECTINFO>
                     <KIDS>{key_ids_xml}</KIDS>
                 </PROTECTINFO>
-                {f'<LA_URL>%s</LA_URL>' % la_url if la_url else ''}
-                {f'<LUI_URL>%s</LUI_URL>' % lui_url if lui_url else ''}
-                {f'<DS_ID>%s</DS_ID>' % base64.b64encode(ds_id).decode() if ds_id else ''}
-                {f'<DECRYPTORSETUP>%s</DECRYPTORSETUP>' % decryptor_setup if decryptor_setup else ''}
-                {f'<CUSTOMATTRIBUTES xmlns="">%s</CUSTOMATTRIBUTES>' % custom_data if custom_data else ''}
+                {'<LA_URL>%s</LA_URL>' % la_url if la_url else ''}
+                {'<LUI_URL>%s</LUI_URL>' % lui_url if lui_url else ''}
+                {'<DS_ID>%s</DS_ID>' % base64.b64encode(ds_id).decode() if ds_id else ''}
+                {'<DECRYPTORSETUP>%s</DECRYPTORSETUP>' % decryptor_setup if decryptor_setup else ''}
+                {'<CUSTOMATTRIBUTES xmlns="">%s</CUSTOMATTRIBUTES>' % custom_data if custom_data else ''}
             </DATA>
         </WRMHEADER>
         """.encode("utf-16-le")
