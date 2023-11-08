@@ -473,7 +473,7 @@ class Cdm:
         output_file: Union[Path, str],
         temp_dir: Optional[Union[Path, str]] = None,
         exists_ok: bool = False
-    ):
+    ) -> int:
         """
         Decrypt a Widevine-encrypted file using Shaka-packager.
         Shaka-packager is much more stable than mp4decrypt.
@@ -549,7 +549,7 @@ class Cdm:
             temp_dir.mkdir(parents=True, exist_ok=True)
             args.extend(["--temp_dir", temp_dir])
 
-        subprocess.check_call([executable, *args])
+        return subprocess.check_call([executable, *args])
 
     @staticmethod
     def encrypt_client_id(
