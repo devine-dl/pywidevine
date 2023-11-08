@@ -82,17 +82,17 @@ class PSSH:
                 box = Box.parse(data)
             except (IOError, construct.ConstructError):  # not a box
                 try:
-                    cenc_header = WidevinePsshData()
-                    cenc_header.ParseFromString(data)
-                    cenc_header = cenc_header.SerializeToString()
-                    if cenc_header != data:  # not actually a WidevinePsshData
+                    widevine_pssh_data = WidevinePsshData()
+                    widevine_pssh_data.ParseFromString(data)
+                    data_serialized = widevine_pssh_data.SerializeToString()
+                    if data_serialized != data:  # not actually a WidevinePsshData
                         raise DecodeError()
                     box = Box.parse(Box.build(dict(
                         type=b"pssh",
                         version=0,
                         flags=0,
                         system_ID=PSSH.SystemId.Widevine,
-                        init_data=cenc_header
+                        init_data=data_serialized
                     )))
                 except DecodeError:  # not a widevine cenc header
                     if "</WRMHEADER>".encode("utf-16-le") in data:
@@ -307,16 +307,16 @@ class PSSH:
         if self.system_id == PSSH.SystemId.Widevine:
             raise ValueError("This is already a Widevine PSSH")
 
-        cenc_header = WidevinePsshData()
-        cenc_header.algorithm = 1  # 0=Clear, 1=AES-CTR
-        cenc_header.key_ids[:] = [x.bytes for x in self.key_ids]
+        widevine_pssh_data = WidevinePsshData()
+        widevine_pssh_data.algorithm = WidevinePsshData.Algorithm.Value("AESCTR")
+        widevine_pssh_data.key_ids[:] = [x.bytes for x in self.key_ids]
 
         if self.version == 1:
             # ensure both cenc header and box has same Key IDs
             # v1 uses both this and within init data for basically no reason
             self.__key_ids = self.key_ids
 
-        self.init_data = cenc_header.SerializeToString()
+        self.init_data = widevine_pssh_data.SerializeToString()
         self.system_id = PSSH.SystemId.Widevine
 
     def to_playready(

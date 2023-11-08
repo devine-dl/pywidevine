@@ -1,8 +1,9 @@
 import base64
 import sys
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
+from aiohttp.typedefs import Handler
 from google.protobuf.message import DecodeError
 
 from pywidevine.pssh import PSSH
@@ -26,8 +27,8 @@ from pywidevine.exceptions import (InvalidContext, InvalidInitData, InvalidLicen
 routes = web.RouteTableDef()
 
 
-async def _startup(app: web.Application):
-    app["cdms"]: dict[tuple[str, str], Cdm] = {}
+async def _startup(app: web.Application) -> None:
+    app["cdms"] = {}
     app["config"]["devices"] = {
         path.stem: path
         for x in app["config"]["devices"]
@@ -38,7 +39,7 @@ async def _startup(app: web.Application):
             raise FileNotFoundError(f"Device file does not exist: {device}")
 
 
-async def _cleanup(app: web.Application):
+async def _cleanup(app: web.Application) -> None:
     app["cdms"].clear()
     del app["cdms"]
     app["config"].clear()
@@ -46,7 +47,7 @@ async def _cleanup(app: web.Application):
 
 
 @routes.get("/")
-async def ping(_) -> web.Response:
+async def ping(_: Any) -> web.Response:
     return web.json_response({
         "status": 200,
         "message": "Pong!"
@@ -211,13 +212,15 @@ async def get_service_certificate(request: web.Request) -> web.Response:
         }, status=400)
 
     if service_certificate:
-        service_certificate = base64.b64encode(service_certificate.SerializeToString()).decode()
+        service_certificate_b64 = base64.b64encode(service_certificate.SerializeToString()).decode()
+    else:
+        service_certificate_b64 = None
 
     return web.json_response({
         "status": 200,
         "message": "Successfully got the Service Certificate.",
         "data": {
-            "service_certificate": service_certificate
+            "service_certificate": service_certificate_b64
         }
     })
 
@@ -366,7 +369,7 @@ async def get_keys(request: web.Request) -> web.Response:
     session_id = bytes.fromhex(body["session_id"])
 
     # get key type
-    key_type = request.match_info["key_type"]
+    key_type: Optional[str] = request.match_info["key_type"]
     if key_type == "ALL":
         key_type = None
 
@@ -414,26 +417,24 @@ async def get_keys(request: web.Request) -> web.Response:
 
 
 @web.middleware
-async def authentication(request: web.Request, handler) -> web.Response:
-    response = None
-    if request.path != "/":
-        secret_key = request.headers.get("X-Secret-Key")
-        if not secret_key:
-            request.app.logger.debug(f"{request.remote} did not provide authorization.")
-            response = web.json_response({
-                "status": "401",
-                "message": "Secret Key is Empty."
-            }, status=401)
-        elif secret_key not in request.app["config"]["users"]:
-            request.app.logger.debug(f"{request.remote} failed authentication with '{secret_key}'.")
-            response = web.json_response({
-                "status": "401",
-                "message": "Secret Key is Invalid, the Key is case-sensitive."
-            }, status=401)
+async def authentication(request: web.Request, handler: Handler) -> web.Response:
+    secret_key = request.headers.get("X-Secret-Key")
 
-    if response is None:
+    if request.path != "/" and not secret_key:
+        request.app.logger.debug(f"{request.remote} did not provide authorization.")
+        response = web.json_response({
+            "status": "401",
+            "message": "Secret Key is Empty."
+        }, status=401)
+    elif request.path != "/" and secret_key not in request.app["config"]["users"]:
+        request.app.logger.debug(f"{request.remote} failed authentication with '{secret_key}'.")
+        response = web.json_response({
+            "status": "401",
+            "message": "Secret Key is Invalid, the Key is case-sensitive."
+        }, status=401)
+    else:
         try:
-            response = await handler(request)
+            response = await handler(request)  # type: ignore[assignment]
         except web.HTTPException as e:
             request.app.logger.error(f"An unexpected error has occurred, {e}")
             response = web.json_response({
@@ -448,7 +449,7 @@ async def authentication(request: web.Request, handler) -> web.Response:
     return response
 
 
-def run(config: dict, host: Optional[Union[str, web.HostSequence]] = None, port: Optional[int] = None):
+def run(config: dict, host: Optional[Union[str, web.HostSequence]] = None, port: Optional[int] = None) -> None:
     app = web.Application(middlewares=[authentication])
     app.on_startup.append(_startup)
     app.on_cleanup.append(_cleanup)

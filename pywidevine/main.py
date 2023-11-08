@@ -26,10 +26,8 @@ def main(version: bool, debug: bool) -> None:
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
     log = logging.getLogger()
 
-    copyright_years = 2022
     current_year = datetime.now().year
-    if copyright_years != current_year:
-        copyright_years = f"{copyright_years}-{current_year}"
+    copyright_years = f"2022-{current_year}"
 
     log.info("pywidevine version %s Copyright (c) %s rlaphoenix", __version__, copyright_years)
     log.info("https://github.com/rlaphoenix/pywidevine")
@@ -38,15 +36,15 @@ def main(version: bool, debug: bool) -> None:
 
 
 @main.command(name="license")
-@click.argument("device", type=Path)
-@click.argument("pssh", type=str)
+@click.argument("device_path", type=Path)
+@click.argument("pssh", type=PSSH)
 @click.argument("server", type=str)
 @click.option("-t", "--type", "type_", type=click.Choice(LicenseType.keys(), case_sensitive=False),
               default="STREAMING",
               help="License Type to Request.")
 @click.option("-p", "--privacy", is_flag=True, default=False,
               help="Use Privacy Mode, off by default.")
-def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
+def license_(device_path: Path, pssh: PSSH, server: str, type_: str, privacy: bool) -> None:
     """
     Make a License Request for PSSH to SERVER using DEVICE.
     It will return a list of all keys within the returned license.
@@ -65,11 +63,8 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
     """
     log = logging.getLogger("license")
 
-    # prepare pssh
-    pssh = PSSH(pssh)
-
     # load device
-    device = Device.load(device)
+    device = Device.load(device_path)
     log.info("[+] Loaded Device (%s L%s)", device.system_id, device.security_level)
     log.debug(device)
 
@@ -84,18 +79,18 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
 
     if privacy:
         # get service cert for license server via cert challenge
-        service_cert = requests.post(
+        service_cert_res = requests.post(
             url=server,
             data=cdm.service_certificate_challenge
         )
-        if service_cert.status_code != 200:
+        if service_cert_res.status_code != 200:
             log.error(
                 "[-] Failed to get Service Privacy Certificate: [%s] %s",
-                service_cert.status_code,
-                service_cert.text
+                service_cert_res.status_code,
+                service_cert_res.text
             )
             return
-        service_cert = service_cert.content
+        service_cert = service_cert_res.content
         provider_id = cdm.set_service_certificate(session_id, service_cert)
         log.info("[+] Set Service Privacy Certificate: %s", provider_id)
         log.debug(service_cert)
@@ -107,14 +102,14 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
     log.debug(challenge)
 
     # send license challenge
-    licence = requests.post(
+    license_res = requests.post(
         url=server,
         data=challenge
     )
-    if licence.status_code != 200:
-        log.error("[-] Failed to send challenge: [%s] %s", licence.status_code, licence.text)
+    if license_res.status_code != 200:
+        log.error("[-] Failed to send challenge: [%s] %s", license_res.status_code, license_res.text)
         return
-    licence = licence.content
+    licence = license_res.content
     log.info("[+] Got License Message")
     log.debug(licence)
 
@@ -135,7 +130,7 @@ def license_(device: Path, pssh: str, server: str, type_: str, privacy: bool):
 @click.option("-p", "--privacy", is_flag=True, default=False,
               help="Use Privacy Mode, off by default.")
 @click.pass_context
-def test(ctx: click.Context, device: Path, privacy: bool):
+def test(ctx: click.Context, device: Path, privacy: bool) -> None:
     """
     Test the CDM code by getting Content Keys for Bitmovin's Art of Motion example.
     https://bitmovin.com/demos/drm
@@ -161,7 +156,7 @@ def test(ctx: click.Context, device: Path, privacy: bool):
     # it will print information as it goes to the terminal
     ctx.invoke(
         license_,
-        device=device,
+        device_path=device,
         pssh=pssh,
         server=license_server,
         type_=LicenseType.Name(license_type),
@@ -382,10 +377,10 @@ def migrate(ctx: click.Context, path: Path) -> None:
 
 
 @main.command("serve", short_help="Serve your local CDM and Widevine Devices Remotely.")
-@click.argument("config", type=Path)
+@click.argument("config_path", type=Path)
 @click.option("-h", "--host", type=str, default="127.0.0.1", help="Host to serve from.")
 @click.option("-p", "--port", type=int, default=8786, help="Port to serve from.")
-def serve_(config: Path, host: str, port: int):
+def serve_(config_path: Path, host: str, port: int) -> None:
     """
     Serve your local CDM and Widevine Devices Remotely.
 
@@ -400,5 +395,5 @@ def serve_(config: Path, host: str, port: int):
     from pywidevine import serve  # isort:skip
     import yaml  # isort:skip
 
-    config = yaml.safe_load(config.read_text(encoding="utf8"))
+    config = yaml.safe_load(config_path.read_text(encoding="utf8"))
     serve.run(config, host, port)

@@ -510,8 +510,7 @@ class Cdm:
 
         input_file = Path(input_file)
         output_file = Path(output_file)
-        if temp_dir:
-            temp_dir = Path(temp_dir)
+        temp_dir_ = Path(temp_dir) if temp_dir else None
 
         if not input_file.is_file():
             raise FileNotFoundError(f"Input file does not exist, {input_file}")
@@ -545,9 +544,9 @@ class Cdm:
             ])
         ]
 
-        if temp_dir:
-            temp_dir.mkdir(parents=True, exist_ok=True)
-            args.extend(["--temp_dir", temp_dir])
+        if temp_dir_:
+            temp_dir_.mkdir(parents=True, exist_ok=True)
+            args.extend(["--temp_dir", str(temp_dir_)])
 
         return subprocess.check_call([executable, *args])
 
@@ -555,8 +554,8 @@ class Cdm:
     def encrypt_client_id(
         client_id: ClientIdentification,
         service_certificate: Union[SignedDrmCertificate, DrmCertificate],
-        key: bytes = None,
-        iv: bytes = None
+        key: Optional[bytes] = None,
+        iv: Optional[bytes] = None
     ) -> EncryptedClientIdentification:
         """Encrypt the Client ID with the Service's Privacy Certificate."""
         privacy_key = key or get_random_bytes(16)
