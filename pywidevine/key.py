@@ -27,7 +27,7 @@ class Key:
     def from_key_container(cls, key: License.KeyContainer, enc_key: bytes) -> Key:
         """Load Key from a KeyContainer object."""
         permissions = []
-        if key.type == License.KeyContainer.KeyType.OPERATOR_SESSION:
+        if key.type == License.KeyContainer.KeyType.Value("OPERATOR_SESSION"):
             for descriptor, value in key.operator_session_key_permissions.ListFields():
                 if value == 1:
                     permissions.append(descriptor.name)

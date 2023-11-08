@@ -39,12 +39,12 @@ def main(version: bool, debug: bool) -> None:
 @click.argument("device_path", type=Path)
 @click.argument("pssh", type=PSSH)
 @click.argument("server", type=str)
-@click.option("-t", "--type", "type_", type=click.Choice(LicenseType.keys(), case_sensitive=False),
+@click.option("-t", "--type", "license_type", type=click.Choice(LicenseType.keys(), case_sensitive=False),
               default="STREAMING",
               help="License Type to Request.")
 @click.option("-p", "--privacy", is_flag=True, default=False,
               help="Use Privacy Mode, off by default.")
-def license_(device_path: Path, pssh: PSSH, server: str, type_: str, privacy: bool) -> None:
+def license_(device_path: Path, pssh: PSSH, server: str, license_type: str, privacy: bool) -> None:
     """
     Make a License Request for PSSH to SERVER using DEVICE.
     It will return a list of all keys within the returned license.
@@ -96,7 +96,6 @@ def license_(device_path: Path, pssh: PSSH, server: str, type_: str, privacy: bo
         log.debug(service_cert)
 
     # get license challenge
-    license_type = LicenseType.Value(type_)
     challenge = cdm.get_license_challenge(session_id, pssh, license_type, privacy_mode=True)
     log.info("[+] Created License Request Message (Challenge)")
     log.debug(challenge)
@@ -150,7 +149,7 @@ def test(ctx: click.Context, device: Path, privacy: bool) -> None:
 
     # Specify OFFLINE if it's a PSSH for a download/offline mode title, e.g., the
     # Download feature on Netflix Apps. Otherwise, use STREAMING or AUTOMATIC.
-    license_type = LicenseType.STREAMING
+    license_type = "STREAMING"
 
     # this runs the `cdm license` CLI-command code with the data we set above
     # it will print information as it goes to the terminal
@@ -159,7 +158,7 @@ def test(ctx: click.Context, device: Path, privacy: bool) -> None:
         device_path=device,
         pssh=pssh,
         server=license_server,
-        type_=LicenseType.Name(license_type),
+        license_type=license_type,
         privacy=privacy
     )
 

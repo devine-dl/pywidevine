@@ -185,7 +185,7 @@ class RemoteCdm(Cdm):
         self,
         session_id: bytes,
         pssh: PSSH,
-        type_: Union[int, str] = LicenseType.STREAMING,
+        license_type: str = "STREAMING",
         privacy_mode: bool = True
     ) -> bytes:
         if not pssh:
@@ -193,20 +193,16 @@ class RemoteCdm(Cdm):
         if not isinstance(pssh, PSSH):
             raise InvalidInitData(f"Expected pssh to be a {PSSH}, not {pssh!r}")
 
-        try:
-            if isinstance(type_, int):
-                type_ = LicenseType.Name(int(type_))
-            elif isinstance(type_, str):
-                type_ = LicenseType.Name(LicenseType.Value(type_))
-            elif isinstance(type_, LicenseType):
-                type_ = LicenseType.Name(type_)
-            else:
-                raise InvalidLicenseType()
-        except ValueError:
-            raise InvalidLicenseType(f"License Type {type_!r} is invalid")
+        if not isinstance(license_type, str):
+            raise InvalidLicenseType(f"Expected license_type to be a {str}, not {license_type!r}")
+        if license_type not in LicenseType.keys():
+            raise InvalidLicenseType(
+                f"Invalid license_type value of '{license_type}'. "
+                f"Available values: {LicenseType.keys()}"
+            )
 
         r = self.__session.post(
-            url=f"{self.host}/{self.device_name}/get_license_challenge/{type_}",
+            url=f"{self.host}/{self.device_name}/get_license_challenge/{license_type}",
             json={
                 "session_id": session_id.hex(),
                 "init_data": pssh.dumps(),
@@ -251,7 +247,7 @@ class RemoteCdm(Cdm):
         if not isinstance(license_message, SignedMessage):
             raise InvalidLicenseMessage(f"Expecting license_response to be a SignedMessage, got {license_message!r}")
 
-        if license_message.type != SignedMessage.MessageType.LICENSE:
+        if license_message.type != SignedMessage.MessageType.Value("LICENSE"):
             raise InvalidLicenseMessage(
                 f"Expecting a LICENSE message, not a "
                 f"'{SignedMessage.MessageType.Name(license_message.type)}' message."

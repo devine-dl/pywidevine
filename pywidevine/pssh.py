@@ -307,9 +307,10 @@ class PSSH:
         if self.system_id == PSSH.SystemId.Widevine:
             raise ValueError("This is already a Widevine PSSH")
 
-        widevine_pssh_data = WidevinePsshData()
-        widevine_pssh_data.algorithm = WidevinePsshData.Algorithm.Value("AESCTR")
-        widevine_pssh_data.key_ids[:] = [x.bytes for x in self.key_ids]
+        widevine_pssh_data = WidevinePsshData(
+            key_ids=[x.bytes for x in self.key_ids],
+            algorithm="AESCTR"
+        )
 
         if self.version == 1:
             # ensure both cenc header and box has same Key IDs

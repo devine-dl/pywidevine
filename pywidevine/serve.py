@@ -270,7 +270,7 @@ async def get_license_challenge(request: web.Request) -> web.Response:
         license_request = cdm.get_license_challenge(
             session_id=session_id,
             pssh=init_data,
-            type_=license_type,
+            license_type=license_type,
             privacy_mode=privacy_mode
         )
     except InvalidSession:
