@@ -140,8 +140,8 @@ def test(ctx: click.Context, device: Path, privacy: bool) -> None:
     """
     # The PSSH is the same for all tracks both video and audio.
     # However, this might not be the case for all services/manifests.
-    pssh = "AAAAW3Bzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAADsIARIQ62dqu8s0Xpa" \
-           "7z2FmMPGj2hoNd2lkZXZpbmVfdGVzdCIQZmtqM2xqYVNkZmFsa3IzaioCSEQyAA=="
+    pssh = PSSH("AAAAW3Bzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAADsIARIQ62dqu8s0Xpa"
+                "7z2FmMPGj2hoNd2lkZXZpbmVfdGVzdCIQZmtqM2xqYVNkZmFsa3IzaioCSEQyAA==")
 
     # This License Server requires no authorization at all, no cookies, no credentials
     # nothing. This is often not the case for real services.
