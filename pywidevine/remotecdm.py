@@ -12,7 +12,7 @@ from Crypto.Signature import pss
 from google.protobuf.message import DecodeError
 
 from pywidevine.cdm import Cdm
-from pywidevine.device import Device
+from pywidevine.device import Device, DeviceTypes
 from pywidevine.exceptions import (DeviceMismatch, InvalidInitData, InvalidLicenseMessage, InvalidLicenseType,
                                    SignatureMismatch)
 from pywidevine.key import Key
@@ -26,7 +26,7 @@ class RemoteCdm(Cdm):
 
     def __init__(
         self,
-        device_type: Union[Device.Types, str],
+        device_type: Union[DeviceTypes, str],
         system_id: int,
         security_level: int,
         host: str,
@@ -37,9 +37,9 @@ class RemoteCdm(Cdm):
         if not device_type:
             raise ValueError("Device Type must be provided")
         if isinstance(device_type, str):
-            device_type = Device.Types[device_type]
-        if not isinstance(device_type, Device.Types):
-            raise TypeError(f"Expected device_type to be a {Device.Types!r} not {device_type!r}")
+            device_type = DeviceTypes[device_type]
+        if not isinstance(device_type, DeviceTypes):
+            raise TypeError(f"Expected device_type to be a {DeviceTypes!r} not {device_type!r}")
 
         if not system_id:
             raise ValueError("System ID must be provided")

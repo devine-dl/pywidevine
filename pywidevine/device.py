@@ -17,7 +17,7 @@ from google.protobuf.message import DecodeError
 from pywidevine.license_protocol_pb2 import ClientIdentification, DrmCertificate, FileHashes, SignedDrmCertificate
 
 
-class _Types(Enum):
+class DeviceTypes(Enum):
     CHROME = 1
     ANDROID = 2
 
@@ -36,7 +36,7 @@ class _Structures:
         "version" / Const(Int8ub, 2),
         "type_" / CEnum(
             Int8ub,
-            **{t.name: t.value for t in _Types}
+            **{t.name: t.value for t in DeviceTypes}
         ),
         "security_level" / Int8ub,
         "flags" / Padded(1, COptional(BitStruct(
@@ -55,7 +55,7 @@ class _Structures:
         "version" / Const(Int8ub, 1),
         "type_" / CEnum(
             Int8ub,
-            **{t.name: t.value for t in _Types}
+            **{t.name: t.value for t in DeviceTypes}
         ),
         "security_level" / Int8ub,
         "flags" / Padded(1, COptional(BitStruct(
@@ -72,14 +72,13 @@ class _Structures:
 
 
 class Device:
-    Types = _Types
     Structures = _Structures
     supported_structure = Structures.v2
 
     def __init__(
         self,
         *_: Any,
-        type_: Types,
+        type_: DeviceTypes,
         security_level: int,
         flags: Optional[dict],
         private_key: Optional[bytes],
@@ -103,7 +102,7 @@ class Device:
         if not private_key:
             raise ValueError("Private Key is required, the WVD does not contain one or is malformed.")
 
-        self.type = self.Types[type_] if isinstance(type_, str) else type_
+        self.type = DeviceTypes[type_] if isinstance(type_, str) else type_
         self.security_level = security_level
         self.flags = flags or {}
         self.private_key = RSA.importKey(private_key)
@@ -238,4 +237,4 @@ class Device:
             raise ValueError(f"Device Data seems to be corrupt or invalid, or migration failed, {e}")
 
 
-__ALL__ = (Device,)
+__ALL__ = (Device, DeviceTypes)

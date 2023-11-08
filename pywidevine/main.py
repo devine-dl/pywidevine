@@ -13,7 +13,7 @@ from unidecode import UnidecodeError, unidecode
 
 from pywidevine import __version__
 from pywidevine.cdm import Cdm
-from pywidevine.device import Device
+from pywidevine.device import Device, DeviceTypes
 from pywidevine.license_protocol_pb2 import FileHashes, LicenseType
 from pywidevine.pssh import PSSH
 
@@ -164,7 +164,7 @@ def test(ctx: click.Context, device: Path, privacy: bool) -> None:
 
 
 @main.command()
-@click.option("-t", "--type", "type_", type=click.Choice([x.name for x in Device.Types], case_sensitive=False),
+@click.option("-t", "--type", "type_", type=click.Choice([x.name for x in DeviceTypes], case_sensitive=False),
               required=True, help="Device Type")
 @click.option("-l", "--level", type=click.IntRange(1, 3), required=True, help="Device Security Level")
 @click.option("-k", "--key", type=Path, required=True, help="Device RSA Private Key in PEM or DER format")
@@ -195,7 +195,7 @@ def create_device(
     log = logging.getLogger("create-device")
 
     device = Device(
-        type_=Device.Types[type_.upper()],
+        type_=DeviceTypes[type_.upper()],
         security_level=level,
         flags=None,
         private_key=key.read_bytes(),

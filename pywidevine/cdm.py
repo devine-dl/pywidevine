@@ -18,7 +18,7 @@ from Crypto.Signature import pss
 from Crypto.Util import Padding
 from google.protobuf.message import DecodeError
 
-from pywidevine.device import Device
+from pywidevine.device import Device, DeviceTypes
 from pywidevine.exceptions import (InvalidContext, InvalidInitData, InvalidLicenseMessage, InvalidLicenseType,
                                    InvalidSession, NoKeysLoaded, SignatureMismatch, TooManySessions)
 from pywidevine.key import Key
@@ -66,7 +66,7 @@ class Cdm:
 
     def __init__(
         self,
-        device_type: Union[Device.Types, str],
+        device_type: Union[DeviceTypes, str],
         system_id: int,
         security_level: int,
         client_id: ClientIdentification,
@@ -76,9 +76,9 @@ class Cdm:
         if not device_type:
             raise ValueError("Device Type must be provided")
         if isinstance(device_type, str):
-            device_type = Device.Types[device_type]
-        if not isinstance(device_type, Device.Types):
-            raise TypeError(f"Expected device_type to be a {Device.Types!r} not {device_type!r}")
+            device_type = DeviceTypes[device_type]
+        if not isinstance(device_type, DeviceTypes):
+            raise TypeError(f"Expected device_type to be a {DeviceTypes!r} not {device_type!r}")
 
         if not system_id:
             raise ValueError("System ID must be provided")
@@ -306,7 +306,7 @@ class Cdm:
                 f"Available values: {LicenseType.keys()}"
             )
 
-        if self.device_type == Device.Types.ANDROID:
+        if self.device_type == DeviceTypes.ANDROID:
             # OEMCrypto's request_id seems to be in AES CTR Counter block form with no suffix
             # Bytes 5-8 does not seem random, in real tests they have been consecutive \x00 or \xFF
             # Real example: A0DCE548000000000500000000000000
