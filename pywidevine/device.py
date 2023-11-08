@@ -105,7 +105,7 @@ class Device:
 
         self.type = self.Types[type_] if isinstance(type_, str) else type_
         self.security_level = security_level
-        self.flags = flags
+        self.flags = flags or {}
         self.private_key = RSA.importKey(private_key)
         self.client_id = ClientIdentification()
         try:
