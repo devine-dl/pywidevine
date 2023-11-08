@@ -31,8 +31,7 @@ from pywidevine.utils import get_binary_path
 
 
 class Cdm:
-    system_id = b"\xed\xef\x8b\xa9\x79\xd6\x4a\xce\xa3\xc8\x27\xdc\xd5\x1d\x21\xed"
-    uuid = UUID(bytes=system_id)
+    uuid = UUID(bytes=b"\xed\xef\x8b\xa9\x79\xd6\x4a\xce\xa3\xc8\x27\xdc\xd5\x1d\x21\xed")
     urn = f"urn:uuid:{uuid}"
     key_format = urn
     service_certificate_challenge = b"\x08\x04"
