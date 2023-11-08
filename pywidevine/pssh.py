@@ -254,6 +254,7 @@ class PSSH:
                     key_ids = [
                         x.text
                         for x in prr_header.findall("./wrm:DATA/wrm:KID", wrm_ns)
+                        if x.text
                     ]
                 elif prr_header_version == "4.1.0.0":
                     key_ids = [
