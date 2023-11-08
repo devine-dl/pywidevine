@@ -263,7 +263,7 @@ class Cdm:
         self,
         session_id: bytes,
         pssh: PSSH,
-        type_: Union[int, str] = LicenseType.STREAMING,
+        type_: Union[int, str] = LicenseType.Value("STREAMING"),
         privacy_mode: bool = True
     ) -> bytes:
         """
@@ -297,12 +297,10 @@ class Cdm:
             raise InvalidInitData(f"Expected pssh to be a {PSSH}, not {pssh!r}")
 
         try:
-            if isinstance(type_, int):
-                LicenseType.Name(int(type_))
-            elif isinstance(type_, str):
+            if isinstance(type_, str):
                 type_ = LicenseType.Value(type_)
-            elif not isinstance(type_, LicenseType):
-                raise InvalidLicenseType()
+            elif not isinstance(type_, int):
+                raise ValueError()
         except ValueError:
             raise InvalidLicenseType(f"License Type {type_!r} is invalid")
 
