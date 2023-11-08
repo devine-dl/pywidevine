@@ -14,16 +14,14 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11.x'
+        python-version: "3.11.x"
     - name: Install Poetry
       uses: abatilo/actions-poetry@v2
       with:
-        poetry-version: '1.4.1'
-    - name: Configure poetry
-      run: poetry config virtualenvs.in-project true
-    - name: Install dependencies
-      run: poetry install --no-dev
-    - name: Build a wheel
+        poetry-version: 1.6.1
+    - name: Install project
+      run: poetry install --only main
+    - name: Build project
       run: poetry build
     - name: Upload wheel
       uses: actions/upload-artifact@v3

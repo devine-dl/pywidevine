@@ -1,7 +1,7 @@
 <p align="center">
     <img src="docs/images/widevine_icon_24.png"> <a href="https://github.com/rlaphoenix/pywidevine">pywidevine</a>
     <br/>
-    <sup><em>Python Widevine CDM implementation.</em></sup>
+    <sup><em>Python Widevine CDM implementation</em></sup>
 </p>
 
 <p align="center">
@@ -15,60 +15,44 @@
         <img src="https://deepsource.io/gh/rlaphoenix/pywidevine.svg/?label=active+issues" alt="DeepSource">
     </a>
 </p>
+<p align="center">
+    <a href="https://github.com/astral-sh/ruff">
+        <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Linter: Ruff">
+    </a>
+    <a href="https://python-poetry.org">
+        <img src="https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json" alt="Dependency management: Poetry">
+    </a>
+</p>
 
 ## Features
 
-- 🛡️ Security-first approach; All user input has Signatures verified
-- 👥 Remotely accessible Server/Client CDM code
-- 📦 Supports parsing and serialization of WVD (v2) provisions
-- 🛠️ Class for creation, parsing, and conversion of PSSH data
-- 🧩 Plug-and-play installation via PIP/PyPI
-- 🗃️ YAML configuration files
+- 🚀 Seamless Installation via [pip](#installation)
+- 🛡️ Robust Security with message signature verification
+- 🙈 Privacy Mode with Service Certificates
+- 🌐 Servable CDM API Server and Client with Authentication
+- 📦 Custom provision serialization format (WVD v2)
+- 🧰 Create, parse, or convert PSSH headers with ease
+- 🗃️ User-friendly YAML configuration
 - ❤️ Forever FOSS!
 
 ## Installation
-
-*Note: Requires [Python] 3.7.0 or newer with PIP installed.*
 
 ```shell
 $ pip install pywidevine
 ```
 
-You now have the `pywidevine` package installed and a `pywidevine` executable is now available.
-Check it out with `pywidevine --help` - Voilà 🎉!
+> **Note**
+If pip gives you a warning about a path not being in your PATH environment variable then promptly add that path then
+close all open command prompt/terminal windows, or `pywidevine` CLI won't work as it will not be found.
 
-### From Source Code
-
-The following steps are instructions on download, preparing, and running the code under a Poetry environment.
-You can skip steps 3-5 with a simple `pip install .` call instead, but you miss out on a wide array of benefits.
-
-1. `git clone https://github.com/rlaphoenix/pywidevine`
-2. `cd pywidevine`
-3. (optional) `poetry config virtualenvs.in-project true` 
-4. `poetry install`
-5. `poetry run pywidevine --help`
-
-As seen in Step 5, running the `pywidevine` executable is somewhat different to a normal PIP installation.
-See [Poetry's Docs] on various ways of making calls under the virtual-environment.
-
-  [Python]: <https://python.org>
-  [Poetry]: <https://python-poetry.org>
-  [Poetry's Docs]: <https://python-poetry.org/docs/basic-usage/#using-your-virtual-environment>
+Voilà 🎉 — You now have the `pywidevine` package installed!  
+You can now import pywidevine in scripts ([see below](#usage)).  
+A command-line interface is also available, try `pywidevine --help`.
 
 ## Usage
 
-The following is a minimal example of using pywidevine in a script. It gets a License for Bitmovin's
-Art of Motion Demo. There's various stuff not shown in this specific example like:
-
-- Privacy Mode
-- Setting Service Certificates
-- Remote CDMs and Serving
-- Choosing a License Type to request
-- Creating WVD files
-- and much more!
-
-Just take a look around the Cdm code to see what stuff does. Everything is documented quite well.
-There's also various functions in `main.py` that showcases a lot of features.
+The following is a minimal example of using pywidevine in a script to get a License for Bitmovin's
+Art of Motion Demo.
 
 ```py
 from pywidevine.cdm import Cdm
@@ -108,15 +92,19 @@ for key in cdm.get_keys(session_id):
 cdm.close(session_id)
 ```
 
-## Troubleshooting
-
-### Executable `pywidevine` was not found
-
-Make sure the Python installation's Scripts directory is added to your Path Environment Variable.
-
-If this happened under a Poetry environment, make sure you use the appropriate Poetry-specific way of calling
-the executable. You may make this executable available globally by adding the .venv's Scripts folder to your
-Path Environment Variable.
+> **Note**
+> There are various features not shown in this specific example like:
+>
+> - Privacy Mode
+> - Setting Service Certificates
+> - Remote CDMs and Serving
+> - Choosing a License Type to request
+> - Creating WVD files
+> - and much more!
+>
+> Take a look at the methods available in the [Cdm class](/pywidevine/cdm.py) and their doc-strings for
+> further information. For more examples see the [CLI functions](/pywidevine/main.py) which uses a lot
+> of previously mentioned features.
 
 ## Disclaimer
 
@@ -159,11 +147,19 @@ been improving its security using math and obscurity for years. It's getting har
 versions only being beaten by Brute-force style methods. However, they have a huge team of very skilled workers, and
 making a CDM in C++ has immediate security benefits and a lot of methods to obscure and obfuscate the code.
 
-## Credit
+## Contributors
+
+<a href="https://github.com/rlaphoenix"><img src="https://images.weserv.nl/?url=avatars.githubusercontent.com/u/17136956?v=4&h=25&w=25&fit=cover&mask=circle&maxage=7d" alt=""/></a>
+<a href="https://github.com/mediaminister"><img src="https://images.weserv.nl/?url=avatars.githubusercontent.com/u/45148099?v=4&h=25&w=25&fit=cover&mask=circle&maxage=7d" alt=""/></a>
+
+## Licensing
+
+This software is licensed under the terms of [GNU General Public License, Version 3.0](LICENSE).  
+You can find a copy of the license in the LICENSE file in the root folder.
 
 - Widevine Icon &copy; Google.
-- The awesome community for their shared research and insight into the Widevine Protocol and Key Derivation.
+- Props to the awesome community for their shared research and insight into the Widevine Protocol and Key Derivation.
 
-## License
+* * *
 
-[GNU General Public License, Version 3.0](LICENSE)
+© rlaphoenix 2022-2023

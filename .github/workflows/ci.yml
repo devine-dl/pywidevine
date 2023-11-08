@@ -7,15 +7,27 @@ on:
     branches: [ master ]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: 1.6.1
+      - name: Install project
+        run: poetry install --all-extras
+      - name: Run pre-commit which does various checks
+        run: poetry run pre-commit run --all-files --show-diff-on-failure
   build:
-
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
-        poetry-version: [1.4.1]
-
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
@@ -25,18 +37,8 @@ jobs:
     - name: Install poetry
       uses: abatilo/actions-poetry@v2
       with:
-        poetry-version: ${{ matrix.poetry-version }}
+        poetry-version: 1.5.1  # 1.6.x+ requires Python 3.8+
     - name: Install project
-      run: |
-        poetry install --no-dev
-        python -m pip install flake8 isort
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Check import order with isort
-      run: isort --check-only --diff .
+      run: poetry install --all-extras --only main
     - name: Build project
       run: poetry build

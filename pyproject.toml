@@ -6,24 +6,30 @@ build-backend = "poetry.core.masonry.api"
 name = "pywidevine"
 version = "1.6.0"
 description = "Widevine CDM (Content Decryption Module) implementation in Python."
-authors = ["rlaphoenix <rlaphoenix@pm.me>"]
 license = "GPL-3.0-only"
+authors = ["rlaphoenix <rlaphoenix@pm.me>"]
 readme = "README.md"
 repository = "https://github.com/rlaphoenix/pywidevine"
-keywords = ["widevine", "drm", "google"]
+keywords = ["python", "drm", "widevine", "google"]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Developers",
-    "Intended Audience :: End Users/Desktop",
-    "Natural Language :: English",
-    "Operating System :: OS Independent",
-    "Topic :: Multimedia :: Video",
-    "Topic :: Security :: Cryptography"
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Intended Audience :: End Users/Desktop",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Topic :: Multimedia :: Video",
+  "Topic :: Security :: Cryptography",
+  "Topic :: Software Development :: Libraries :: Python Modules"
+]
+include = [
+  { path = "CHANGELOG.md", format = "sdist" },
+  { path = "README.md", format = "sdist" },
+  { path = "LICENSE", format = "sdist" },
 ]
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://github.com/rlaphoenix/pywidevine/issues"
-"Forums" = "https://github.com/rlaphoenix/pywidevine/discussions"
+"Issues" = "https://github.com/rlaphoenix/pywidevine/issues"
+"Discussions" = "https://github.com/rlaphoenix/pywidevine/discussions"
 "Changelog" = "https://github.com/rlaphoenix/pywidevine/blob/master/CHANGELOG.md"
 
 [tool.poetry.dependencies]
@@ -37,12 +43,45 @@ Unidecode = "^1.3.7"
 PyYAML = "^6.0.1"
 aiohttp = {version = "^3.8.6", optional = true}
 
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^2.2.1"
+mypy = "^1.4.1"
+mypy-protobuf = "^3.4.0"
+types-protobuf = "^4.24.0.4"
+types-requests = "^2.31.0.10"
+types-PyYAML = "^6.0.12.12"
+isort = "^5.11.5"
+ruff = "~0.1.4"
+
 [tool.poetry.extras]
 serve = ["aiohttp", "PyYAML"]
 
 [tool.poetry.scripts]
 pywidevine = "pywidevine.main:main"
 
+[tool.ruff]
+extend-exclude = [
+  "*_pb2.py",
+  "*.pyi",
+]
+force-exclude = true
+line-length = 120
+select = ["E4", "E7", "E9", "F", "W"]
+
+[tool.ruff.extend-per-file-ignores]
+"pywidevine/__init__.py" = ["F403"]
+
 [tool.isort]
 line_length = 118
-extend_skip_glob = ["*_pb2.py", "*_pb2.pyi"]
+extend_skip_glob = ["*_pb2.py", "*.pyi"]
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+exclude = [
+  '_pb2.pyi?$'  # generated protobuffer files
+]
+follow_imports = "silent"
+ignore_missing_imports = true
+no_implicit_optional = true
