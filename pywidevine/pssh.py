@@ -257,7 +257,7 @@ class PSSH:
                     ]
                 elif prr_header_version == "4.1.0.0":
                     key_ids = [
-                        x.get("VALUE")
+                        x.attrib["VALUE"]
                         for x in prr_header.findall("./wrm:DATA/wrm:PROTECTINFO/wrm:KID", wrm_ns)
                     ]
                 elif prr_header_version in ("4.2.0.0", "4.3.0.0"):
@@ -265,7 +265,7 @@ class PSSH:
                     #       This is because some Key IDs can be AES-CTR while some are AES-CBC.
                     #       Conversion to WidevineCencHeader could use this information.
                     key_ids = [
-                        x.get("VALUE")
+                        x.attrib["VALUE"]
                         for x in prr_header.findall("./wrm:DATA/wrm:PROTECTINFO/wrm:KIDS/wrm:KID", wrm_ns)
                     ]
                 else:
