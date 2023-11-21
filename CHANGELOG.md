@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2023-11-21
+
+- Supported Serve API: `v1.4.3` or newer
+
+### Added
+
+- Ability to specify output filename by specifying a full path or a relative file name in CLI command `create-device`.
+- Add the staging privacy certificate (`staging.google.com`) to `Cdm.staging_privacy_cert`.
+  - Similar to `common_privacy_cert` which would be used on Google's production license server,
+  - Though this one is used on Google's staging license server (a production-ready testing server).
+
+### Changed
+
+- Raise an error if a file already exists at the output path in CLI command `create-device`.
+- Use std-lib xml instead of lxml to reduce dependencies and support ARM (#35).
+- Lessen restriction on Python version to any Python version `>=3.7`, but `<4.0`.
+  - I was hoping to do `^3.7`, but some dependencies also require `<4.0` therefore I cannot, for now.
+- Move Key ID parsing to static `PSSH.parse_key_ids()` method.
+- The `shaka-packager` subprocess call's return code is now returned from `Cdm.decrypt()`.
+- The flags variable of a `Device` now defaults to a dict, even if not set.
+- Heavily improve initializing of protobuf objects, improving readability, typing, and linting quite a bit.
+- Renamed Device's `_Types` enum class to `DeviceTypes`.
+
+### Removed
+
+- Removed `Device.Types` class variable alias to `_Types` enum class as a static linter cannot recognize a class
+  variable as a type. Instead, the actual `_Types` (now named `DeviceTypes`) enum should be imported and used instead.
+
+### Fixed
+
+- Ensure output directory exists before creating new `.wvd` files in CLI command `create-device`.
+- Ignore empty Key ID values in v4.0.0.0 PlayReadyHeaders.
+- Remove `Cdm.system_id` class variable as it conflicted with the `cdm.system_id` class instance variable of the same
+  name. It's also generally not needed. The same data can be gotten via `Cdm.uuid.bytes`.
+- Casting of `type_` when passed a non-int value in `Cdm.get_license_challenge()`.
+- Pass a PSSH object in `test` CLI command instead of a string.
+- Lower-case and setup `__all__` correctly, add missing `__all__` in some of the modules.
+  - For the longest time I thought it was `__ALL__` and an iterable of objects/variables.
+  - However, its actually `__all__` and explicitly a list of Strings...
+
+### New Contributors
+
+- [mediaminister](https://github.com/mediaminister)
+
 ## [1.6.0] - 2023-02-03
 
 - Supported Serve API: `v1.4.3` or newer
