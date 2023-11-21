@@ -7,45 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.6.0] - 2023-02-03
 
+- Supported Serve API: `v1.4.3` or newer
+
 ### Added
 
-- Added full support for Python 3.11.
-- Added new `export-device` command-line function to export WVD files back as files. I.e., a private key and client ID
-  blob file.
-
-### Changed
-
-- The PyYAML dependency is now required even if you do not install Pywidevine with the `serve` extra dependencies.
-- This was required for exporting WVD metadata in the new `export-device` command-line function.
+- Support Python 3.11.
+- New CLI command `export-device` to export WVD files back as files. I.e., a private key and client ID blob file.
 
 ## [1.5.3] - 2022-12-27
 
+- Supported Serve API: `v1.4.3` or newer
+
 ### Added
 
-- Added a new utility `load_xml()` to parse XML data with lxml ignoring Namespaces.
-- PSSH class now has a `__str__` and `__repr__` representation to print the object in more Human-friendly and
-  useful ways. `str(pssh)` is now identical to `pssh.dumps()` and `repr(pssh)` or just `pssh` in some cases will
-  result in a nice overview of the PSSHs contents.
-- Added new `to_playready()` method to convert Widevine PSSH Data to PlayReady PSSH Data. Please note that the
+- New utility `load_xml()` to parse XML data with lxml ignoring Namespaces.
+- PSSH class now have `__str__` and `__repr__` methods to print the object in more Human-friendly ways.
+  - `str(pssh)` is now identical to `pssh.dumps()`.
+  - `repr(pssh)` or just `pssh` in some cases will result in a nice overview of the PSSHs contents.
+- New `to_playready()` method to convert Widevine PSSH Data to PlayReady PSSH Data. Please note that the
   Checksums for AES-CTR and COCKTAIL KIDs cannot be calculated as the Content Encryption Key would be needed.
 
 ### Changed
 
-- You must now explicitly specify the System ID to use when creating a new PSSH box.
-  This allows you to now create PlayReady PSSH boxes.
+- The System ID must now be explicitly specified when creating a new PSSH box in `PSSH.new()`.
+  - This allows you to now create PlayReady PSSH boxes.
 - The `playready_to_widevine()` method has been renamed to just `to_widevine()`.
 
 ### Fixed
 
-- Fix the capitalization of the `key_IDs` field, and it's value when creating a new PSSH box.
-- Fix the ability to create v0 PSSH boxes by only setting the `key_IDs` field when the version is set to `1`.
-- Fix parsing of Key IDs within PlayReadyHeaders by using the new `load_xml()` utility to ignore namespaces so
-  that `xpath` can correctly locate any and all KID tags.
+- Correct capitalization of the `key_IDs` field when making the new box in `PSSH.new()`.
+- Correct the value type of `key_IDs` value when creating a new box in `PSSH.new()`.
+- Ensure Key IDs are list of UUIDs instead of bytes in `PSSH.new()`.
+- Create v0 PSSH boxes by only setting the `key_IDs` field when the version is set to `1` in `PSSH.new()`.
 - Fix loading of PlayReadyHeaders (and PlayReadyObjects) as PSSH boxes. It would previously load it under the
   Widevine SystemID breaking all PlayReady-specific code after construction.
-- Fix support for loading PlayReadyObjects with more than one PlayReadyHeader (more than one record).
-
+- Parse Key IDs within PlayReadyHeaders by using the new `load_xml()` utility to ignore namespaces so that `xpath` can
+  correctly locate any and all KID tags.
+- Support parsing PlayReadyObjects with more than one PlayReadyHeader (more than one record).
 ## [1.5.2] - 2022-10-11
+
+- Supported Serve API: `v1.4.3` or newer
 
 ### Fixed
 
@@ -54,323 +55,379 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.1] - 2022-10-23
 
+- Supported Serve API: `v1.4.3` or newer
+
 ### Added
 
-- Added import path shortcuts in the `__init__.py` package constructor to all the user classes. Now you can do e.g.,
-  `from pywidevine import PSSH` instead of `from pywidevine.pssh import PSSH`. You can still do it both ways.
-- Improved error handling and sanitization checks when parsing some Service Certificates in `set_service_certificate()`.
+- Support for big-int Key IDs in `PSSH`. All integer values are converted to a UUID and are loaded big-endian.
+- Import path shortcuts in the `__init__.py` package constructor to all the user classes.
+  - Now you can do e.g., `from pywidevine import PSSH` instead of `from pywidevine.pssh import PSSH`.
+  - You can still do it the full direct way if you want.
+- Parsing check to the raw DrmCertificate in `Cdm.set_service_certificate()`.
 
 ### Changed
 
-- Maximum concurrent Cdm sessions are now set to 16 as it seems tto be a more common limit on more up-to-date CDMs,
-  including Android's OEMCrypto Library. This also helps encourage people to close their sessions when they are no
-  longer required.
-- Service Certificates are now stored in the session as a `SignedDrmCertificate`. This is to keep the signature with
-  the stored Certificate for use by the user if necessary. It also reduces code repetition relating to the usage of the
-  signature.
+- Service Certificates are now stored in the session as a `SignedDrmCertificate`.
+  - This is to keep the signature with the Certificate, without wrapping it in a SignedMessage unnecessarily.
+- Reduced the maximum concurrent Cdm sessions from 50 to 16 as it seems to be a more common limit on more up-to-date
+  devices and versions of OEMCrypto. This also helps encourage people to close their sessions when they are no longer
+  required.
 
 ### Fixed
 
-- Improved reliability of computing License Signatures. Some license messages when parsed would be slightly different
-  when re-serialized with `SerializeToString()`, therefore the computed signature would have always mismatched.
-- Added support for Key IDs that are integer values. Effectively all values are now considered to be a UUID as 16 bytes
-  (in hex or bytes) or an integer value with support for up to 16 bytes. All integer values are converted to a UUID and
-  are loaded big-endian.
-- Fixed acquisition of the Certificate's provider_id within `set_service_certificate()` in some edge cases, but also
-  when you try to remove the certificate by setting it to `None`.
-- PSSH now dumps in the same version the PSSH was loaded or created in. Previously it would always dump as a v1 PSSH
-  box due to a cascading check in pymp4. It now also honors the currently set version in the case it gets overridden.
+- Acquisition of the Certificate's provider_id in `Cdm.set_service_certificate()` in some edge cases, but also when you
+  try to remove the certificate by setting it to `None`.
+- When exporting a PSSH object it will now do so in the same version it was initially loaded or created in. Previously
+  it would always dump as a v1 PSSH box due to a cascading check in pymp4. It now also honors the currently set version
+  in the case it gets overridden.
+- Improved reliability of computing License Signatures by verifying the signature against the original raw License
+  message instead of the re-serialized version of the message.
+  - Some license messages when parsed would be slightly different when re-serialized against my protobuf, therefore the
+    computed signature would have always mismatched.
 
 ## [1.5.0] - 2022-09-24
 
-With just one change this brings along a reduced dependency tree, smoother experience across different platforms, and
-speed improvements (especially on larger input messages).
+- Supported Serve API: `v1.4.3` or newer
 
 ### Changed
 
-- Updated protobuf dependency to v4.x branch with recompiled proto-buffers. They now also have python stub files.
+- Updated `protobuf` dependency to `v4.x` branch with recompiled proto-buffers, specifically `v4.21.6`.
 
 ## [1.4.4] - 2022-09-24
 
+- Supported Serve API: `v1.4.3` or newer
+
 ### Security
 
-- Updated `protobuf` dependency to v3.19.5 due to the Security Advisory [GHSA-8gq9-2x98-w8hf].
+- Updated `protobuf` dependency to `3.19.5` due to the Security Advisory [GHSA-8gq9-2x98-w8hf].
 
   [GHSA-8gq9-2x98-w8hf]: <https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-8gq9-2x98-w8hf>
 
 ## [1.4.3] - 2022-09-10
 
-RemoteCdm minimum supported Serve API version is now v1.4.3.
+- Supported Serve API: `v1.4.3` or newer
 
 ### Added
 
-- Cdm now has a `get_service_certificate()` endpoint to get the currently set service certificate of a Session.
-  RemoteCdm and Serve also has support for these endpoints.
+- Serve's `/get_license_challenge` endpoint can now disable privacy mode per-request, even if a service certificate is
+  set, as long as privacy mode is not enforced in the Serve API config.
+- New Cdm method `get_service_certificate()` to get the currently set service certificate of a Session.
 
 ### Changed
 
-- Added installation instructions, troubleshooting steps, a minimal example, and a list of features to the README.
-- The minimum version for lxml has been upped to >=4.9.1. This is due to some vulnerabilities present in all older
-  versions.
-- All f-string formatting in log statements have been replaced with logging formatting to improve performance when
-  logging is disabled.
+- All f-string formatting in log statements have been replaced with logging formatting to save performance when that
+  log wouldn't have been printed.
+- The Serve APIs `/open` endpoint's function has been renamed from `open()` to `open_()` to prevent shadowing the
+  built-in `open`.
+
+### Security
+
+- Updated `lxml` dependency to `>=4.9.1` due to the Security Advisory [GHSA-wrxv-2j5q-m38w].
+
+  [GHSA-wrxv-2j5q-m38w]: <https://github.com/advisories/GHSA-wrxv-2j5q-m38w>
 
 ### Removed
 
 - The Protocol image has been removed from the README as it is too broad to Browser scenarios and some stuff on it
   is too broad. If the viewer is really interested they can Google it to get a much better view into the Protocol.
 
-### Fixed
-
-- Serve's get_license_challenge can now disable privacy mode even if a service certificate is set, as long as privacy
-  mode is not enforced in settings.
-
 ## [1.4.2] - 2022-09-05
+
+- Supported Serve API: `v1.4.0` to `v1.4.2`
 
 ### Changed
 
-- Device's constructor no longer throws `ValueError` exceptions if it fails to parse the provided Client ID or it's
-  VMP data if any. It will now raise a `DecodeError`.
+- Sessions in `Cdm.open()` are now initialized with a unique session number.
+- Android Cdm Devices now use a Request ID formula similar to OEMCrypto library when generating a Challenge.
+  This formula has yet to be fully confirmed and ironed out, but it is closer than the Chrome Cdm formula.
+- `Device` no longer throws `ValueError` exceptions on `DecodeErrors` if it fails to parse the provided Client ID, or
+  it's VMP data if any. It will now re-raise `DecodeError`.
 
 ### Fixed
 
-- Android Cdm Devices now use a Request ID formula similar to OEMCrypto library when generating a Challenge.
-  This formula has yet to be fully confirmed and ironed out, but it is better than the Chrome Cdm formula.
-- Various Proto Message Parsing now has full verification and expects the parsed response to be the same length
-  as the serialized input, or it will throw an error. For example, this prevents vague errors to happen when you
-  provide a bad License to `Cdm.parse_license`. It also prevents possibilities of it going past various other checks
-  depending on the first few bytes provided.
+- Parsed Proto Messages now go through an elaborate yet efficient verification, it must parse and serialize back to it's
+  received form, byte-for-byte, or it will be rejected.
+  - This prevents protobuf from parsing a message that could be a different message depending on the starting bytes.
+  - It was possible to bypass some minor checks by providing specially crafted messages that parsed as other messages.
+    However, I haven't noticed any way where this would lead to a vulnerability or anything bad. It mostly just lead to
+    Serve API crashes or just rejected messages down the chain as they wouldn't have the right data within them.
 
 ## [1.4.1] - 2022-08-17
 
-Small patch release for some fixes to the PSSH classes recent face-lift.
+- Supported Serve API: `v1.4.0` to `v1.4.2`
 
 ### Changed
 
-- `PSSH.overwrite_key_ids` static method is now an instance method named `set_key_ids` and works on the current
-  instance instead of making and returning a new one.
-- `PSSH.get_key_ids` static method is now a property method named `key_ids`. This allows swift access to all the
-  Key IDs of the current access.
-- `PSSH.from_playready_pssh` class method is now an instance method named `playready_to_widevine` and now converts
-  the current instances values directly. This allows you to more easily instance as any PSSH, then convert afterwards.
+- Rework `PSSH.overwrite_key_ids()` as an instance method now named `PSSH.set_key_ids()`.
+- Rework `PSSH.get_key_ids()` as a property method named `PSSH.key_ids`. This allows swift access to all the Key IDs of
+  the current PSSH object data.
+- Rework `PSSH.from_playready_pssh()` as an instance method now named `PSSH.playready_to_widevine()` that now converts
+  the current instances values directly. This allows you to more easily instance as any PSSH, then convert after wards
+  and only if wanted and when needed.
 
 ## [1.4.0] - 2022-08-06
 
-This release is a face-lift for the PSSH class with a moderate amount of Cdm and Serve interface changes.  
-You will likely need to make a moderate amount of changes in your client code, please study the changelog.
-
-Please note that while it was always privatized as `_sessions`, accessing the Session directly for any purpose was
-never recommended or supported. With v1.4.0, there will be drastic problems if you continue to do so. One of the
-few reasons to do that was to get the license keys which is no longer required with CDMs new `get_keys()` method.
-
-RemoteCdm minimum supported Serve API version is now v1.4.0.
+- Supported Serve API: `v1.4.0` to `v1.4.2`
 
 ### Added
 
-- The PSSH class now has a `new()` method to craft a new PSSH box. The box can be crafted from arbitrary init_data
-  and/or key_ids. If only key_ids is supplied a new Widevine Cenc Header will be created and the key IDs will be put
-  into it. This allows you to make compliant v0 or v1 boxes with as little data as just a Key ID.
-- The PSSH class now has `dump()` and `dumps()` methods to serialize the data as binary or base64 respectively. It will
-  be serialized as a pymp4 PSSH box, ready to be used in an MP4 file.
-- Cdm now has a method `get_keys()` to get the keys of the loaded license. This is the alternative to manually
-  accessing the keys by navigating the `_sessions` class instance variable.
-- Serve API now also has a `/get_keys` endpoint to call the `get_keys()` method of the underlying Cdm session.
+- New PSSH boxes can now be manually crafted with `PSSH.new()`.
+  - The box can be crafted from arbitrary init_data and/or key_ids.
+  - If only key_ids is supplied a new Widevine CENC Header will be created and the key IDs will be put into it.
+  - This allows you to make compliant v0 or v1 boxes with as little data as just a Key ID.
+- PSSH boxes can now be exported as MP4 Box objects using pymp4 with `PSSH.dump()`.
+- PSSH boxes can now also be exported as Base64 strings with `PSSH.dumps()`.
+- License Keys can now be obtained from a Cdm session with a parsed license using `Cdm.get_keys()`.
+  - This is the alternative to manually accessing the keys from the `Cdm._sessions` object.
+  - It is also available on the Serve API through the new `/get_keys` endpoint.
 
 ### Changed
 
-- Cdm and RemoteCdm now expect a PSSH object as the `init_data` param for `get_license_challenge`. You can no longer
-  provide it anything else, that includes base64 or bytes form. It must be a PSSH object.
-- Serve no longer returns license keys in the response of the `/keys` endpoint.
-- Serve has changed the endpoint `/challenge` to `/get_license_challenge` and `/keys` to `/parse_license`. This is to
-  be consistent with the method names of the underlying Cdm class.
-- The PSSH class has been reworked from being a static helper class to a proper PSSH class.
-- PSSH.from_playready_pssh is now a class method and returns as a PSSH object.
+- `PSSH.get_as_box()` has been merged into the PSSH constructor, simplifying usage of the PSSH class.
+- `PSSH.from_playready_pssh()` is now a class method and returns as a PSSH object.
+- Only PSSH objects are now accepted by `Cdm.get_license_challenge()`.
+  - You can no longer provide it anything else, that includes base64 or bytes form.
+  - You should first parse or make a new PSSH with the PSSH class, and then pass that object.
+  - This is to simplify typing and repetition across the codebase.
+- Serve's `/challenge` endpoint has been changed to `/get_license_challenge`, and `/keys` to `/parse_license`.
+  - This is to be consistent with the method names of the underlying Cdm class.
+- Serve now passes the license type value as-is (as a string) instead of parsing it to an integer.
+- Serve now passes the key type value as-is (as a string) instead of parsing it to an integer.
+- Serve no longer returns license keys in the response of the `/parse_license` endpoint.
+  - Once parsed, the `/get_keys` endpoint should be used to retrieve keys.
+- Privatized the `Cdm._sessions` class instance variable even more to `Cdm.__sessions`.
+  - If you still need something from it, while not advised, you can call it via `cdm._Cdm__sessions`.
 
 ### Removed
 
-- PSSH.get_as_box has been removed and merged into the PSSH constructor.
-- PSSH.from_key_ids has been removed entirely, you should now use `PSSH.new(key_ids=...)` instead.
-- All uses of a local Session() object has been removed from RemoteCdm. The session is now fully controlled by the
+- `PSSH.from_key_ids()` has been removed entirely, you should now use `PSSH.new(key_ids=...)` instead.
+- Unnecessary parsing of the license message received by RemoteCdm is now skipped. Parsing should be done by the Serve
+  API as it will be able to actually decrypt and verify the message.
+- All uses of a local `Session` object has been removed from `RemoteCdm`. The session is now fully controlled by the
   remote API and de-synchronization by external alteration or unexpected exceptions is no longer a possibility.
 
 ### Fixed
 
-- Various uses of the `key_ids` field of WidevinePsshData proto has been fixed in the PSSH class.
-- Fixed a few Serve API crashes in edge cases with improved error handling on Cdm method calls.
+- Correct the WidevinePsshData proto field name from `key_id` to `key_ids` in the PSSH class.
+- Handle `DecodeError` and `SignatureMismatch` exceptions in the Serve `/set_service_certificate` endpoint.
+- Handle `InvalidInitData` and `InvalidLicenseType` exceptions in the Serve `/get_license_challenge` endpoint.
+- Handle various exceptions in the Serve `/parse_license` endpoint.
+- Handle various client-side runtime errors in `RemoteCdm` with improved error handling.
 
 ## [1.3.1] - 2022-08-04
 
+- Supported Serve API: `v1.3.0` to `v1.3.1`
+
 ### Added
 
-- Cdm and RemoteCdm can now be supplied a string value for `device_type` for scenarios where providing it as a string
-  is more convenient (e.g., from Config files).
+- String value support to the `device_type` parameter in `Cdm`s constructor.
+
+### Changed
+
+- Serve no longer requires `force_privacy_mode` to be defined in the config file. It now assumes a default of false.
+- Serve now uses `pywidevine serve ...` instead of the full project url in the Server header.
+- `RemoteCdm`s Server version check is now case-insensitive.
 
 ### Fixed
 
-- The `force_privacy_mode` key no longer needs to be defined at all in the configuration file. This was previously
-  crashing serve APIs if it wasn't set before starting.
-- RemoteCdm's Server version check will no longer fail under certain serving conditions e.g., Caddy prepending `Caddy`
-  to the Server header value. It also fixes case sensitivity and removed the full url from the header.
+- `RemoteCdm`s Server version check now ignores other Server/Proxy names prepended or appended to the Server header.
+  - For example, if reverse-proxied through Caddy it may have prepended "Caddy" to the Server header.
 
 ## [1.3.0] - 2022-08-04
 
+- Supported Serve API: `v1.3.0` to `v1.3.1`
+
 ### Added
 
-- New RemoteCdm class to be used as Client code for the `serve` Remote CDM API server. The RemoteCdm should be used
-  entirely separately from the normal Cdm class. All serve APIs must update to v1.3.0 to be compatible. The RemoteCdm
-  verifies the server version to ensure compatibility. Changes to the serve API schema will be immediately reflected in
-  the RemoteCdm code in the future.
-- Implemented `/set_service_certificate` endpoint in serve schema as an improved way of setting the service certificate
-  than passing it to `/challenge`.
-- You can now unset the service certificate by providing an empty service certificate value (or None or null). This
-  includes support for doing so even in serve API and the new RemoteCdm.
+- New Client for using the Serve API; `RemoteCdm` class. It has an identical interface as the original `Cdm` class.
+  - However, the constructor is different. Instead of passing a Widevine device object, you need to pass information
+    about the API like its host (including port if not on a reverse-proxy), and info about the device like its name and
+    security level.
+  - Other than that, once the RemoteCdm object is created, you use it exactly the same. Magic!
+  - Any time there's a change or fix to `Cdm` in this update or any in the future, will also be done to RemoteCdm.
+- New Serve endpoint `/set_service_certificate` as an improved way of setting (or unsetting) the service certificate.
 
 ### Changed
 
-- The Construction of the Cdm object has changed. You can now initialize it with more direct values if you don't want
-  to use the Device class or don't want to use `.wvd` files. To use Device classes, you must now use the
-  `Cdm.from_device()` class method.
-- The ability to pass the certificate to `/challenge` has been removed. Please use the new `/set_service_certificate`
-  endpoint before calling `/challenge`. You do not need to set it every time. Once per session is enough unless you
-  now want to use a different certificate.
+- `Cdm`s constructor now uses more direct values, so you don't have to use the Device class or `.wvd` files.
+  - To continue using `.wvd` files you must now use `Cdm.from_device()` instead.
+- You can now unset the Service certificate by providing `None` to `Cdm.set_service_certificate().
+
+### Removed
+
+- Serve's `/challenge` endpoint no longer accepts a `service_certificate` item in the JSON payload.
+  - Instead, use the new `/set_service_certificate` endpoint before calling `/challenge`.
+  - You do not need to set it every time. Once per session is enough unless you now want to use a different certificate.
 
 ## [1.2.1] - 2022-08-02
 
-This release is primarily a maintenance release for `serve` functionality but some Cdm fixes are also present.
-
 ### Added
 
-- You can now return all License Keys from Serve's `/keys` endpoint by supplying `ALL` as the key type.
-  This adds support for Exchange Systems like Netflix's WidevineExchange MSL scheme. I recommend using `ALL` unless
-  you only want `CONTENT` keys and will not be using any other type of keys including `SIGNING` and `OPERATOR_SESSION`.
-- Serve now has a `/close` endpoint to close a session. The Cdm has a limit of 50 sessions per user.
-- Serve now responds with a `Server` header denoting that pywidevine serve is being used, also specifying the version.
-  This allows Clients to selectively support APIs based on version, and also verify the API as being supported at all.
-- Serve now verifies that all Devices in config actually exist before letting you start serving.
+- Support `SignedDrmCertificate` and `SignedMessages` messages in `Cdm.encrypt_client_id()`. This is mainly as a
+  convenience for any scripts wanting to encrypt their Client ID with a service certificate manually.
+- All License Keys from Serve's `/keys` endpoint can now be received by providing `ALL` as the key type.
+  - This adds support for systems needing more than two types of keys from the license, e.g., Netflix MSL.
+  - For faster response times it is best to still ask for only `CONTENT` keys if that's all you need.
+- Serve now has a `/close` endpoint to close a session. All clients should close the session once they are finished
+  with it or the user will eventually hit a limit of 50 sessions per user and the server will hog memory til it
+  restarts.
+- Serve now verifies that all Devices in config actually exist before starting the server.
+- Serve now responds with a `Server` header denoting that pywidevine serve is being used, and it's version.
+  - This allows Clients to selectively support APIs based on version; verify the API as being supported.
 
 ### Changed
 
-- Downgraded lxml to >=4.8.0 to support projects using pycaption, which is likely considering the project's topic.
+- Lessened version pin on `lxml` from `^4.9.1` to `>=4.8.0` to support projects using pycaption.
+- Service Certificate is now saved in the session as a `SignedMessage` with a `SignedDrmCertificate` instead of the raw
+  `DrmCertificate`. The `SignedMessage` is unsigned as the `SignedDrmCertificate` within it, is signed. This is so
+  anything inheriting or using the Cdm (e.g., `serve`) can verify the certificate down the chain and keep it signed.
+- Serve now constructs one Cdm object for each user+device combination so one user cannot fill or overuse the CDM
+  session limit.
 - All of Serve's endpoints now have a `/{device}` prefix. E.g., instead of `/challenge/STREAMING`, it's now
-  `/device_name/challenge/STREAMING`. This is to support a multi-device per-user Cdm setup, see Fixed below regarding
-  Serve's Cdm objects.
+  `/device_name/challenge/STREAMING`. This is to support the previous change.
 
 ### Fixed
 
-- Fixed support for Raw PSSH values, e.g., Netflix's WidevineExchange MSL Scheme arbitrary init_data value.
-- The Service Certificate is now saved to the Session in full SignedMessage form instead of just the underlying
-  DrmCertificate. This is so any class inheriting the Cdm (e.g., for Remote capabilities) can sufficiently use
-  and supply the service certificate while being signed.
-- Serve's /open endpoint will now return a 400 error if there's too many sessions opened.
-- Serve's Cdm objects with Device initialized are now stored per-user and device name. This fixes the issue where the
-  entire user base has only 50 sessions available to be used. Effectively rate limiting to only 50 users at a time.
-  Since /close endpoint was not implemented yet, there was no way to even close effectively meaning only 50 uses could
-  be done.
+- Handle server crash when the session limit is reached in Serve's `/open` endpoint by returning a 400 error.
+- Serve now correctly updates (or rather now makes a new Cdm object) if a user switches from one Device to another.
+  - Previously it would reuse an existing Cdm object, but would forget to switch device if they changed.
+  - Note: It does still leave the previous Cdm with the older Device in memory.
+- Handle IOError when parsing bytes as MP4 Box to allow arbitrary data to be made as new boxes in `PSSH.get_as_box()`.
 
 ## [1.2.0] - 2022-07-30
 
 ### Added
 
-- New CLI command `serve` to serve local WVD devices and CDM sessions remotely as a JSON API.
-- The CLI command `migrate` can now accept a folder path to batch migrate WVD files.
-- The Cdm now uses custom exceptions where the use case is justified. All custom exceptions are under a parent custom
-  exception to allow catching of any Pywidevine exception.
+- New CLI command `serve` that hosts a CDM API that can be externally accessed with authentication. This can be used to
+  access and/or share your CDM without exposing your Widevine device private key, or even it's identity by enforcing
+  Privacy Mode.
+  - Requires installing with the `serve` extras, i.e., `pip install pywidevine[serve]`.
+  - The default host of `127.0.0.1` blocks access outside your network, even if port-forwarded. Use
+    `-h 0.0.0.0` to allow remote access.
+  - Setup requires the use of a config file for configuring the CDM and authentication. An example config file named
+    `serve.example.yml` in the project root folder has verbose documentation on available options.
+- Batch migration of WVD files by passing a folder as the path to the CLI command `migrate`.
+- Strict mode to `PSSH.get_as_box()` to raise an Exception if passed data is not already a box, as it has been improved
+  to create a new box if not detected as a box already.
 
 ### Changed
 
-- The Cdm has been reworked as a session-based Cdm. You now initialize the Cdm with just the device you wish to use,
-  and now you open sessions with `Cdm.open()` to get a session ID. For usage example see `license` CLI command in
-  `main.py`.
-- The Cdm no longer requires you to specify `raw` bool parameter. It now supports arbitrary and valid Widevine Cenc
- Header Data without needing to explicitly specify which it is.
-- The Cdm `pssh` param has been renamed as `init_data`. Doc-strings have been changed to prioritize explanation of it
-  referring to Widevine Cenc Header rather than PSSH Boxes. This is to show that the Cdm more-so wants Init Data than
-  a PSSH box. The full PSSH is never kept nor ever used, only it's init data is. It still supports PSSH box data.
-- Cdm `set_service_certificate()` now returns the provider ID string rather than the underlying (and now verified)
-  DrmCertificate. This is because the DrmCertificate is not likely useful and would still be possible to obtain in full
-  but quick access to the Provider ID may be more useful.
-- License responses can now be only be parsed once by `Cdm.parse_license()`. Any further attempts will raise an
-  InvalidContext exception. This is because context data is now cleared for it's respective License Request once it's
-  parsed to reduce data lingering in memory.
-- Trove Classifier for Development Status is now 5 (Production/Stable).
+- Elevated the Development Status Classifier from 4 (Beta) to 5 (Production/Stable).
+- License messages passed to `Cdm.parse_license()` are now rejected if they are not of `LICENSE` type.
+- Service Certificates passed to `Cdm.set_service_certificate()` are now verified. This patches a trivial "exploit"
+  that allows an attacker to recover the plaintext Client ID from a license under Privacy Mode. See
+  <https://gist.github.com/rlaphoenix/74acabdd7269a21845e18b621c5860ef>.
+- Data passed to `PSSH.get_as_box()` now supports arbitrary and box data automatically as it tries to detect if it is a
+  valid box, otherwise makes a new box.
+- Renamed the `Cdm` constructor's parameter `pssh` to `init_data`, as that's what the Cdm actually wants and uses,
+  whereas a `PSSH` is an `mp4` atom (aka box) containing `init_data` (a Widevine CENC Header). The full PSSH is never
+  kept nor ever used. It still accepts PSSH box data.
+- Service Certificate's Provider ID is now returned by `Cdm.set_service_certificate()` instead of the passed
+  certificate, of which they would already have.
+- The Cdm class now works more closely to the official CDM model. Instead of using one Cdm object per-request having to
+  provide device information each time,
+  - You now initialize the Cdm with the Widevine device you wish to use and then open sessions with `Cdm.open()`.
+  - You will receive a session ID that are then passed to other methods of the same Cdm object.
+  - The PSSH/init_data that used to be passed to the constructor is now passed to `Cdm.get_license_challenge()`.
+  - This allows initializing one Cdm object with up to 50 sessions open at the same time.
+    Session limits seem to fluctuate between libraries and devices. 50 seems like a permissive value.
+  - Once you are finished with DRM operations, discard all session (and key) data by calling `Cdm.close(session_id)`.
+- License Keys are no longer returned by `Cdm.parse_license()` and now must be obtained directly from `cdm._sessions`.
+  - For example, `for key in cdm._sessions[session_id].keys: print(f"[{key.type}] {key.kid.hex}:{key.key.hex()}")`.
+  - This is to detach the action of parsing a license as just for getting keys, as it isn't. It can be and should be
+    used for a lot more data like security requirements like HDCP, expiration, and more.
+  - It is also to detour users from directly using the keys over the `Cdm.decrypt()` method.
+- Various std-lib exceptions have been replaced with custom exceptions under `pywidevine.exceptions`.
+- License responses can now only be parsed once by `Cdm.parse_license()`. Any further attempts will raise an
+  `InvalidContext` exception.
+  - This is as license context data is cleared once used to reduce data lingering in memory, otherwise the more license
+    requests you make without closing the session, the more and more memory is taken up.
+  - Open multiple sessions in the same Cdm object if you need to request and parse multiple licenses on the same device.
 
 ### Removed
 
-- You can no longer provide a direct `DrmCertificate` to `Cdm.set_service_certificate()` for security reasons.
-  You must provide either a `SignedDrmCertificate` or a `SignedMessage` containing a `SignedDrmCertificate`.
-- PSSH `from_init_data()` has been removed. It was unused and is unnecessary with improvements to `get_as_box()`.
+- Direct `DrmCertificate`s are no longer supported by `Cdm.set_service_certificate()` as they have no signature.
+  See the 3rd Change above. Provide either a `SignedDrmCertificate` or a `SignedMessage` containing a
+  `SignedDrmCertificate`. A `SignedMessage` containing a `DrmCertificate` will also be rejected.
+- `PSSH.from_init_data()`, use `PSSH.get_as_box()`.
+- `raw` parameter of `Cdm` constructor, as well as CLI commands as it is now handled upstream by the `PSSH` creation.
 
 ### Fixed
 
-- Cdm `set_service_certificate()` now verifies the signature of the provided Certificate. This patches a trivial
-  exploit/workaround that allows an attacker to recover the plaintext Client ID from an encrypted Client ID.
-- Cdm `parse_license()` now verifies the input message type as a `LICENSE` message.
-- Cdm `parse_license()` now clears context for the License Request once it's License Response message has been parsed.
-  This reduces data lingering in the `context` dictionary when it may only be needed once.
-- The Context Availability error handler in Cdm `parse_license()` has been fixed.
-- Typing of `type_` param of `Cdm.get_license_challenge()` has been fixed.
+- Detection of Widevine CENC Header data encoded as bytes in `PSSH.get_as_box()`.
+- Custom ValueError on missing contexts instead of the generic KeyError in `Cdm.parse_license()`.
+- Typing of `type_` parameter in `Cdm.get_license_challenge()`.
+- Value of `type_` parameter if is a string in `Cdm.get_license_challenge()`.
 
 ## [1.1.1] - 2022-07-22
 
 ### Fixed
 
-- The --vmp argument of the create-device command is now optional.
+- The `-v/--vmp` parameter of the `test` CLI command is now optional.
 
 ## [1.1.0] - 2022-07-21
 
 ### Added
 
-- Added support for setting a Service Certificate in SignedDrmCertificate form as well as raw DrmCertificate form.
-  However, It's unlikely for the service to provide the certificate in raw DrmCertificate form without a signature.
-- Added a CLI command `create-device` to create Widevine Device (`.wvd`) files from RSA PEM/DER Private Keys and
+- WVD (Widevine Device file) Version 2 bringing reduced file sizes by up to 30%~.
+- New CLI command `create-device` to create `.wvd` files (Widevine Device files) from RSA PEM/DER Private Keys and
   Client ID blobs. You can also provide VMP (FileHashes) data which will be merged into the Client ID blob.
-- Added a CLI command `migrate` that uses `Device.migrate()` and `dump()` to migrate older v1 Widevine Device files
-  to v2.
-- Added the v1 Structure of Widevine Devices for migration use.
-- Added `Device.migrate()` class method that effectively loads older format WVD data. You can then use `dumps()` to
-  get back the WVD data in the latest supported format.
-- Added ability to use Privacy mode on the test command.
+- New CLI command `migrate` that uses `Device.migrate()` and `dump()` to migrate older v1 Widevine Device files to v2.
+- New `Device` method `migrate()` to load an older Widevine Device file format. It is recommended to then use the
+  `dumps()` method to save it as a new v2 Widevine Device file, which can then be loaded normally.
+- Support `SignedDrmCertificate` and `DrmCertificate` messages in `Cdm.set_service_certificate()`. Services can provide
+  the certificate as a `SignedMessage`, `SignedDrmCertificate`, or a `DrmCertificate`. Only `SignedMessage` and
+  `SignedDrmCertificate` are signed.
+- Privacy Mode can now be used in the `test` CLI command with the `-p/--privacy` flag.
 
 ### Changed
 
-- Set Service Certificates are now stored as the raw underlying DrmCertificate as the signature data is unused by
-  the CDM.
-- Moved all Widevine Device structures under a Structures class.
-- I removed the `send_key_control_nonce` flag from all Structures even though it was technically used.
-  This is because the flag was never used as of this project, and I do not want to take up the flag slot.
-
-### Fixed
-
-- Devices `dump()` function now uses the correct `type_` parameter when building the struct.
-- Fixed release date year of v1.0.0 and v1.0.1 in the changelog.
-
-## [1.0.1] - 2022-07-21
-
-### Added
-
-- More information to the PyPI meta information, e.g., classifiers, readme, some URLs.
-
-### Changed
-
-- Moved the License Type parameter from the Cdm constructor to `get_license_challenge()`.
-- The Session ID is no longer used as the Request ID which could help with blocks or replay checks due
-  to it being the same Session ID for each request. It's now a random 16 byte value each time.
-- Only the Context Data of each license request is now stored instead of the full message.
+- Moved all `.wvd` Widevine Device file structures from `Device` to a `_Structures` class in `device.py`. The
+  `_Structures` class can be imported and used directly, or via `Device.structures`.
+- Moved the majority of Widevine Device file migration code from the CLI command `migrate` to `Device.migrate()`. The
+  CLI command `migrate` now internally uses `Device.migrate()`.
+- Set Service Certificates are now stored as `DrmCertificate`s instead of a `SignedMessage` as the signature and other
+  data in the message is unused and unneeded.
 
 ### Removed
 
-- Removed unnecessary and unused `raw` Cdm class instance variable.
+- Unused Widevine Device file flag `send_key_control_nonce` from v1 and v2 Structures as it was only used before initial
+  release, and isn't a necessary nor useful flag.
 
 ### Fixed
 
-- CDMs `set_service_certificate()` now correctly raises a DecodeError on Decode Error instead of a ValueError.
-- Context Data will now always match to their corresponding License Responses. This fixes an issue where creating
-  a second challenge would overwrite the context data of the first challenge. Parsing the first challenge after
-  would result in either a key decrypt error, or garbage key data.
+- Correct the type argument name from `type` to `type_` in `Device.dump()`.
+
+### Security
+
+- Even though support for more kinds of Service Certificate Signatures were added, they are still unverified as the
+  signing public key is Unknown.
+
+## [1.0.1] - 2022-07-21
+
+### Changed
+
+- Moved the License Type parameter from the `Cdm` constructor to it's `get_license_challenge()` method.
+- Every License request now uses a unique random value instead of the CDM Session ID.
+- Only the Context Data of License requests are now stored in the Session instead of the full message.
+- Session ID formula now uses a random 16-byte value for both Chrome and Android provisions.
+
+### Removed
+
+- Unused and unnecessary `Cdm.raw` class instance variable.
+
+### Fixed
+
+- Re-raise DecodeErrors instead of a new ValueError on DecodeErrors in `Cdm.set_service_certificate()`.
+- Creating a new License request no longer overwrites the context data of the previous challenge.
 
 ## [1.0.0] - 2022-07-20
 
 Initial Release.
+
+### Security
+
+- Service Certificate Signatures are unverified as the signing public key is Unknown.
 
 [1.6.0]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.6.0
 [1.5.3]: https://github.com/rlaphoenix/pywidevine/releases/tag/v1.5.3
