@@ -1,18 +1,18 @@
 <p align="center">
-    <img src="docs/images/widevine_icon_24.png"> <a href="https://github.com/rlaphoenix/pywidevine">pywidevine</a>
+    <img src="docs/images/widevine_icon_24.png"> <a href="https://github.com/devine-dl/pywidevine">pywidevine</a>
     <br/>
     <sup><em>Python Widevine CDM implementation</em></sup>
 </p>
 
 <p align="center">
-    <a href="https://github.com/rlaphoenix/pywidevine/actions/workflows/ci.yml">
-        <img src="https://github.com/rlaphoenix/pywidevine/actions/workflows/ci.yml/badge.svg" alt="Build status">
+    <a href="https://github.com/devine-dl/pywidevine/actions/workflows/ci.yml">
+        <img src="https://github.com/devine-dl/pywidevine/actions/workflows/ci.yml/badge.svg" alt="Build status">
     </a>
     <a href="https://pypi.org/project/pywidevine">
         <img src="https://img.shields.io/badge/python-3.7%2B-informational" alt="Python version">
     </a>
-    <a href="https://deepsource.io/gh/rlaphoenix/pywidevine">
-        <img src="https://deepsource.io/gh/rlaphoenix/pywidevine.svg/?label=active+issues" alt="DeepSource">
+    <a href="https://deepsource.io/gh/devine-dl/pywidevine">
+        <img src="https://deepsource.io/gh/devine-dl/pywidevine.svg/?label=active+issues" alt="DeepSource">
     </a>
 </p>
 <p align="center">

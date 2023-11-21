@@ -443,7 +443,7 @@ async def authentication(request: web.Request, handler: Handler) -> web.Response
             }, status=500)
 
     response.headers.update({
-        "Server": f"https://github.com/rlaphoenix/pywidevine serve v{__version__}"
+        "Server": f"https://github.com/devine-dl/pywidevine serve v{__version__}"
     })
 
     return response

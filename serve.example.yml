@@ -4,7 +4,7 @@
 # List of Widevine Device (.wvd) file paths to use with serve.
 # Note: Each individual user needs explicit permission to use a device listed.
 devices:
-  - 'C:\Users\rlaphoenix\Documents\WVDs\test_device_001.wvd'
+  - 'C:\Users\devine-dl\Documents\WVDs\test_device_001.wvd'
 
 # List of User's by Secret Key. The Secret Key must be supplied by the User to use the API.
 users:

@@ -17,7 +17,7 @@ Poetry installation instructions should be followed from the Poetry Docs: https:
     reason which quickly filled up my System storage.
 2. Clone the Repository:
     ```shell
-    git clone https://github.com/rlaphoenix/pywidevine
+    git clone https://github.com/devine-dl/pywidevine
     cd pywidevine
     ```
 3. Install the Project with Poetry:

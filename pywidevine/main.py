@@ -30,7 +30,7 @@ def main(version: bool, debug: bool) -> None:
     copyright_years = f"2022-{current_year}"
 
     log.info("pywidevine version %s Copyright (c) %s rlaphoenix", __version__, copyright_years)
-    log.info("https://github.com/rlaphoenix/pywidevine")
+    log.info("https://github.com/devine-dl/pywidevine")
     if version:
         return
 
