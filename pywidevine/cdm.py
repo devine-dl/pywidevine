@@ -222,7 +222,14 @@ class Cdm:
 
         try:
             signed_message.ParseFromString(certificate)
-            if signed_message.SerializeToString() == certificate:
+            if (
+                signed_message.SerializeToString() == certificate or
+                # See https://github.com/devine-dl/pywidevine/issues/41
+                all(
+                    bytes(chunk) == signed_message.SerializeToString()
+                    for chunk in zip(*[iter(certificate)] * len(signed_message.SerializeToString()))
+                )
+            ):
                 signed_drm_certificate.ParseFromString(signed_message.msg)
             else:
                 signed_drm_certificate.ParseFromString(certificate)
