@@ -33,7 +33,7 @@ include = [
 "Changelog" = "https://github.com/devine-dl/pywidevine/blob/master/CHANGELOG.md"
 
 [tool.poetry.dependencies]
-python = ">=3.7,<4.0"
+python = ">=3.8,<4.0"
 protobuf = "^4.24.4"
 pymp4 = "^1.4.0"
 pycryptodome = "^3.19.0"
