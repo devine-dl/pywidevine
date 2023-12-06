@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
@@ -37,7 +37,7 @@ jobs:
     - name: Install poetry
       uses: abatilo/actions-poetry@v2
       with:
-        poetry-version: 1.5.1  # 1.6.x+ requires Python 3.8+
+        poetry-version: 1.6.1
     - name: Install project
       run: poetry install --all-extras --only main
     - name: Build project

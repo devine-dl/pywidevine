@@ -1,7 +1,7 @@
 # Development
 
 This project is managed using [Poetry](https://python-poetry.org), a fantastic Python packaging and dependency manager.
-Install the latest version of Poetry before continuing. Development currently requires Python 3.7+.
+Install the latest version of Poetry before continuing. Development currently requires Python 3.8+.
 
 ## Set up
 
