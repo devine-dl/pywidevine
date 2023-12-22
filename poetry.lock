@@ -1043,9 +1043,9 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [extras]
-serve = ["PyYAML", "aiohttp"]
+serve = ["aiohttp"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "a5a7a83c133ad9ac077f3b610bde9f670840e36330471de63f65e0c0703e5a2f"
+content-hash = "4c60027ce2b015eebd8f7ce9f54623e291e6ddf812066267b798d13dbd97c274"
