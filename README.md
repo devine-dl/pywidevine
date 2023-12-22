@@ -151,6 +151,7 @@ making a CDM in C++ has immediate security benefits and a lot of methods to obsc
 
 <a href="https://github.com/rlaphoenix"><img src="https://images.weserv.nl/?url=avatars.githubusercontent.com/u/17136956?v=4&h=25&w=25&fit=cover&mask=circle&maxage=7d" alt=""/></a>
 <a href="https://github.com/mediaminister"><img src="https://images.weserv.nl/?url=avatars.githubusercontent.com/u/45148099?v=4&h=25&w=25&fit=cover&mask=circle&maxage=7d" alt=""/></a>
+<a href="https://github.com/sr0lle"><img src="https://images.weserv.nl/?url=avatars.githubusercontent.com/u/111277375?v=4&h=25&w=25&fit=cover&mask=circle&maxage=7d" alt=""/></a>
 
 ## Licensing
 
