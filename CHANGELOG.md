@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2023-12-22
+
+### Added
+
+- Added `py.typed` file to support PEP561 and silence Mypy.
+
+### Changed
+
+- Dropped support for Python 3.7.
+- Recompiled protobuffers for version 4.25.
+
+### Fixed
+
+- Missing `yaml` dependency as it was only installed alongside the `serve` extras group.
+- Duplicate Concatenated SignedMessages no longer throw a verification failure in `Cdm.set_service_certificate()`.
+  To ensure security of the messages, verification will still fail if any of the SignedMessages do not match each other.
+
+### New Contributors
+
+- [sr0lle](https://github.com/sr0lle)
+
 ## [1.7.0] - 2023-11-21
 
 - Supported Serve API: `v1.4.3` or newer
@@ -473,6 +494,8 @@ Initial Release.
 
 - Service Certificate Signatures are unverified as the signing public key is Unknown.
 
+[1.8.0]: https://github.com/devine-dl/pywidevine/releases/tag/v1.8.0
+[1.7.0]: https://github.com/devine-dl/pywidevine/releases/tag/v1.7.0
 [1.6.0]: https://github.com/devine-dl/pywidevine/releases/tag/v1.6.0
 [1.5.3]: https://github.com/devine-dl/pywidevine/releases/tag/v1.5.3
 [1.5.2]: https://github.com/devine-dl/pywidevine/releases/tag/v1.5.2
