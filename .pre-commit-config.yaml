@@ -3,15 +3,25 @@
 
 exclude: '_pb2.pyi?$'
 repos:
-  - repo: https://github.com/mtkennerly/pre-commit-hooks
-    rev: v0.4.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.2
     hooks:
-      - id: poetry-ruff-check
-      - id: poetry-mypy
+      - id: ruff-check
+        language: system
+        types: [ python ]
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.18.2
+    hooks:
+      - id: mypy
+        language: system
+        types: [ python ]
+        args: []  # override defaults to empty
   - repo: https://github.com/pycqa/isort
     rev: 6.1.0
     hooks:
       - id: isort
+        language: system
+        types: [ python ]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
