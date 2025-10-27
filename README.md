@@ -11,11 +11,6 @@
     <a href="https://pypi.org/project/pywidevine">
         <img src="https://img.shields.io/badge/python-3.9%2B-informational" alt="Python version">
     </a>
-    <a href="https://deepsource.io/gh/devine-dl/pywidevine">
-        <img src="https://deepsource.io/gh/devine-dl/pywidevine.svg/?label=active+issues" alt="DeepSource">
-    </a>
-</p>
-<p align="center">
     <a href="https://github.com/astral-sh/ruff">
         <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Linter: Ruff">
     </a>
