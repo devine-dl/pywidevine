@@ -15,14 +15,15 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.14"
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          poetry-version: 2.1.3
-      - name: Install project
-        run: poetry install --all-extras
+          version: "0.9.5"
+          enable-cache: true
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
       - name: Run pre-commit which does various checks
-        run: poetry run pre-commit run --all-files --show-diff-on-failure
+        run: uv run pre-commit run --all-files --show-diff-on-failure
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -34,11 +35,12 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install poetry
-      uses: abatilo/actions-poetry@v3
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
       with:
-        poetry-version: 2.1.3
-    - name: Install project
-      run: poetry install --all-extras --only main
+        version: "0.9.5"
+        enable-cache: true
+    - name: Install the project
+      run: uv sync --locked --all-extras
     - name: Build project
-      run: poetry build
+      run: uv build

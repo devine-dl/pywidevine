@@ -1,16 +1,21 @@
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry]
+[project]
 name = "pywidevine"
 version = "1.9.0"
 description = "Widevine CDM (Content Decryption Module) implementation in Python."
-license = "GPL-3.0-only"
-authors = ["rlaphoenix <rlaphoenix@pm.me>"]
+authors = [{ name = "rlaphoenix", email = "rlaphoenix@pm.me" }]
+requires-python = ">=3.9"
 readme = "README.md"
-repository = "https://github.com/devine-dl/pywidevine"
-keywords = ["python", "drm", "widevine", "google"]
+license = "GPL-3.0-only"
+keywords = [
+  "python",
+  "drm",
+  "widevine",
+  "google",
+]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
@@ -19,45 +24,50 @@ classifiers = [
   "Operating System :: OS Independent",
   "Topic :: Multimedia :: Video",
   "Topic :: Security :: Cryptography",
-  "Topic :: Software Development :: Libraries :: Python Modules"
+  "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-include = [
-  { path = "CHANGELOG.md", format = "sdist" },
-  { path = "README.md", format = "sdist" },
-  { path = "LICENSE", format = "sdist" },
+dependencies = [
+  "protobuf~=6.33.0",
+  "pymp4~=1.4.0",
+  "pycryptodome~=3.23.0",
+  "click~=8.1.7",
+  "requests~=2.32.5",
+  "Unidecode~=1.3.7",
+  "PyYAML~=6.0.3",
 ]
 
-[tool.poetry.urls]
-"Issues" = "https://github.com/devine-dl/pywidevine/issues"
-"Discussions" = "https://github.com/devine-dl/pywidevine/discussions"
-"Changelog" = "https://github.com/devine-dl/pywidevine/blob/master/CHANGELOG.md"
+[project.optional-dependencies]
+serve = ["aiohttp~=3.13.1"]
 
-[tool.poetry.dependencies]
-python = ">=3.9,<4.0"
-protobuf = "^6.33.0"
-pymp4 = "^1.4.0"
-pycryptodome = "^3.23.0"
-click = "^8.1.7"
-requests = "^2.32.5"
-Unidecode = "^1.3.7"
-PyYAML = "^6.0.3"
-aiohttp = {version = "^3.13.1", optional = true}
+[project.urls]
+Repository = "https://github.com/devine-dl/pywidevine"
+Issues = "https://github.com/devine-dl/pywidevine/issues"
+Discussions = "https://github.com/devine-dl/pywidevine/discussions"
+Changelog = "https://github.com/devine-dl/pywidevine/blob/master/CHANGELOG.md"
 
-[tool.poetry.group.dev.dependencies]
-pre-commit = "^4.3.0"
-mypy = "^1.18.2"
-mypy-protobuf = "^3.6.0"
-types-protobuf = "^6.32.1.20250918"
-types-requests = "^2.32.4.20250913"
-types-PyYAML = "^6.0.12.20250915"
-isort = "^6.1.0"
-ruff = "~0.14.2"
-
-[tool.poetry.extras]
-serve = ["aiohttp"]
-
-[tool.poetry.scripts]
+[project.scripts]
 pywidevine = "pywidevine.main:main"
+
+[dependency-groups]
+dev = [
+  "pre-commit~=4.3.0",
+  "mypy~=1.18.2",
+  "mypy-protobuf~=3.6.0",
+  "types-protobuf~=6.32.1.20250918",
+  "types-requests~=2.32.4.20250913",
+  "types-PyYAML~=6.0.12.20250915",
+  "isort~=6.1.0",
+  "ruff~=0.14.2",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "pywidevine",
+  "CHANGELOG.md",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["pywidevine"]
 
 [tool.ruff]
 extend-exclude = [
