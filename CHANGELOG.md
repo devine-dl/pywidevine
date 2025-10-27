@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2025-12-22
+
+Just a small update to update imports, support the latest python version, and fix configs.
+
+### Added
+
+- Support for Python 3.14 (and retroactively 3.13).
+
+### Removed
+
+- Dropped support for Python 3.8.
+- DeepSource config and badge.
+
+### Fixed
+
+- Fixed pre-commit config, now using all official repos while still utilizing poetry dependencies.
+- Fixed the GitHub workflows for CI/CD, now using the latest action versions.
+
 ## [1.8.0] - 2023-12-22
 
 ### Added
